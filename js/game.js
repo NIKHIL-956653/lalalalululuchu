@@ -507,8 +507,13 @@ async function makeMove(x, y) {
   if (playing && !won) advanceTurn();
 }
 
+// -------------------------------------------------------------
+// UPDATED RESOLVE REACTIONS (FIXES 15-SECOND DELAY)
+// -------------------------------------------------------------
 async function resolveReactions() {
   const q = [];
+  
+  // 1. Initial scan for unstable cells
   for (let y = 0; y < rows; y++) {
     for (let x = 0; x < cols; x++) {
         if (board[y][x].isBlocked) continue; 
@@ -520,7 +525,7 @@ async function resolveReactions() {
 
   const sleep = ms => new Promise(r => setTimeout(r, ms));
   let loopCount = 0;
-  const MAX_LOOPS = 400;
+  const MAX_LOOPS = 600; // Safety break
 
   while (q.length) {
     loopCount++;
@@ -530,15 +535,18 @@ async function resolveReactions() {
     q.length = 0;
     const toInc = [];
 
+    // Achievement Tracking
     let reactionSize = wave.length;
     maxChainReaction += reactionSize;
     if (maxChainReaction >= 50) {
         tryUnlockAchievement('nuclear', 'Nuclear Launch', 'Trigger a reaction of 50+ atoms');
     }
 
+    // Effects
     if (loopCount > 3) triggerShake(); 
     if (loopCount > 8) triggerFlash(players[current].color); 
 
+    // Process Wave
     for (const [x, y] of wave) {
       const cap = capacity(x, y, rows, cols);
       const cell = board[y][x];
@@ -547,8 +555,10 @@ async function resolveReactions() {
       cell.count -= cap;
       if (cell.count === 0) cell.owner = -1;
 
-      if (loopCount < 20) playSound("explode");
+      // Audio (limit to prevent ear-bleeding)
+      if (loopCount < 15) playSound("explode");
 
+      // Visuals
       const cellIndex = y * cols + x;
       const cellElement = boardEl.children[cellIndex];
       if (cellElement) {
@@ -558,6 +568,7 @@ async function resolveReactions() {
           spawnParticles(centerX, centerY, players[current].color);
       }
 
+      // Logic: Spread to neighbors
       for (const [nx, ny] of neighbors(x, y, rows, cols, board)) { 
         const nc = board[ny][nx];
         nc.owner = current;
@@ -569,10 +580,36 @@ async function resolveReactions() {
     paintAll();
     for (const p of toInc) q.push(p);
 
+    // --- NEW: EARLY WIN DETECTION ---
+    // If we have made enough moves, check if everyone else is dead.
+    // If so, STOP the reaction immediately.
+    if (movesMade > players.length * 2) {
+        const activeOwners = new Set();
+        let hasOrbs = false;
+        
+        // Quick scan of the board
+        for(let r = 0; r < rows; r++) {
+            for(let c = 0; c < cols; c++) {
+                if (!board[r][c].isBlocked && board[r][c].owner !== -1) {
+                    activeOwners.add(board[r][c].owner);
+                    hasOrbs = true;
+                }
+            }
+        }
+
+        // If only 1 player remains, BREAK THE LOOP
+        if (hasOrbs && activeOwners.size === 1) {
+            q.length = 0; // Clear remaining explosions
+            break;        // Exit the loop immediately
+        }
+    }
+    // --------------------------------
+
+    // Dynamic Delay: Speed up as the reaction gets longer
     let delay = 120;
-    if (loopCount > 10) delay = 60;
-    if (loopCount > 30) delay = 10; 
-    if (loopCount > 60) delay = 5;
+    if (loopCount > 5) delay = 60;
+    if (loopCount > 15) delay = 10; 
+    if (loopCount > 40) delay = 5;
 
     await sleep(delay);
   }

@@ -1,84 +1,103 @@
-// js/fx.js
+// js/fx.js (Robust Version)
 
-// 1. PARTICLE SYSTEM (Combined: Optimized for Mobile + Good Looks)
-export function spawnParticles(x, y, color) {
-  // CHECK: Is this a mobile screen? (< 800px)
-  const isMobile = window.innerWidth < 800;
-  
-  // Mobile gets 5 particles (Performance), Desktop gets 12 (Visuals)
-  const particleCount = isMobile ? 5 : 12; 
-  
-  for (let i = 0; i < particleCount; i++) {
-    const spark = document.createElement('div');
-    spark.className = 'spark'; // Use the correct CSS class
-    spark.style.setProperty('--color', color);
-    
-    // Adjust size based on device
-    spark.style.width = isMobile ? '4px' : '6px';
-    spark.style.height = isMobile ? '4px' : '6px';
-    
-    // Ensure positioning is correct
-    spark.style.left = x + 'px';
-    spark.style.top = y + 'px';
-    
-    document.body.appendChild(spark);
+// 1. SETUP FX LAYER
+const fxLayer = document.createElement("div");
+fxLayer.id = "fxLayer";
+Object.assign(fxLayer.style, {
+    position: "fixed", top: "0", left: "0",
+    width: "100%", height: "100%",
+    pointerEvents: "none", zIndex: "9999", overflow: "hidden"
+});
+document.body.appendChild(fxLayer);
 
-    const angle = Math.random() * Math.PI * 2;
-    const velocity = Math.random() * 50 + 30; 
-    const tx = Math.cos(angle) * velocity;
-    const ty = Math.sin(angle) * velocity;
+// 2. SETUP FLASH OVERLAY
+const flashOverlay = document.createElement("div");
+flashOverlay.id = "flash-overlay";
+Object.assign(flashOverlay.style, {
+    position: "fixed", top: "0", left: "0",
+    width: "100vw", height: "100vh",
+    pointerEvents: "none", zIndex: "9000",
+    backgroundColor: "white", opacity: "0",
+    transition: "opacity 0.1s ease-out",
+    mixBlendMode: "overlay"
+});
+document.body.appendChild(flashOverlay);
 
-    const animation = spark.animate([
-      { transform: 'translate(0, 0) scale(1)', opacity: 1 },
-      { transform: `translate(${tx}px, ${ty}px) scale(0)`, opacity: 0 }
-    ], {
-      // Mobile: 800ms (Fast cleanup to stop lag)
-      // Desktop: 1200ms (Slow drift for beauty)
-      duration: isMobile ? 800 : 1200, 
-      easing: 'ease-out', 
+// -------------------------------------------------------------
+// PARTICLE POOL
+// -------------------------------------------------------------
+const particlePool = [];
+
+function getParticle() {
+    if (particlePool.length > 0) return particlePool.pop();
+    const p = document.createElement("div");
+    // FORCE STYLES IN JS (So we don't depend on style.css)
+    Object.assign(p.style, {
+        position: "absolute",
+        width: "8px",
+        height: "8px",
+        borderRadius: "50%",
+        pointerEvents: "none"
     });
-
-    animation.onfinish = () => spark.remove();
-  }
+    return p;
 }
 
-// 2. SCREEN SHAKE (Safety Check Added)
+function releaseParticle(p) {
+    p.remove();
+    particlePool.push(p);
+}
+
+// -------------------------------------------------------------
+// EXPORTED FUNCTIONS
+// -------------------------------------------------------------
+
+export function spawnParticles(x, y, color) {
+    const count = 12; 
+    for (let i = 0; i < count; i++) {
+        const p = getParticle();
+        fxLayer.appendChild(p);
+        
+        // Apply color and position
+        p.style.backgroundColor = color;
+        p.style.boxShadow = `0 0 10px ${color}`;
+        p.style.left = x + "px";
+        p.style.top = y + "px";
+        
+        // Random physics
+        const angle = Math.random() * Math.PI * 2;
+        const velocity = 30 + Math.random() * 50; 
+        const tx = Math.cos(angle) * velocity;
+        const ty = Math.sin(angle) * velocity;
+        const duration = 400 + Math.random() * 200;
+
+        // Animate
+        const anim = p.animate([
+            { transform: 'translate(0, 0) scale(1)', opacity: 1 },
+            { transform: `translate(${tx}px, ${ty}px) scale(0)`, opacity: 0 }
+        ], {
+            duration: duration,
+            easing: 'cubic-bezier(0, .9, .57, 1)'
+        });
+
+        anim.onfinish = () => releaseParticle(p);
+    }
+}
+
 export function triggerShake() {
-  const board = document.querySelector('.board');
-  if (!board) return; // Safety check
-  
-  board.classList.remove('shake-active');
-  void board.offsetWidth; 
-  board.classList.add('shake-active');
+    const board = document.querySelector('.board');
+    if (!board) return;
+    board.classList.remove('shake-active');
+    void board.offsetWidth; // Force reflow
+    board.classList.add('shake-active');
+    setTimeout(() => board.classList.remove('shake-active'), 400);
 }
 
-// 3. FLASH TINT (Robust Creation)
-export function triggerFlash(color) {
-  let overlay = document.getElementById('flash-overlay');
-  
-  // Create overlay if it doesn't exist yet
-  if (!overlay) {
-    overlay = document.createElement('div');
-    overlay.id = 'flash-overlay';
-    // Inline styles to ensure it works even if CSS is slow to load
-    overlay.style.position = 'fixed';
-    overlay.style.top = '0';
-    overlay.style.left = '0';
-    overlay.style.width = '100vw';
-    overlay.style.height = '100vh';
-    overlay.style.pointerEvents = 'none';
-    overlay.style.zIndex = '9000';
-    overlay.style.transition = 'opacity 0.1s ease-out';
-    overlay.style.mixBlendMode = 'screen';
-    document.body.appendChild(overlay);
-  }
-  
-  overlay.style.backgroundColor = color;
-  overlay.style.opacity = '0.2'; // Subtle flash
-  setTimeout(() => { overlay.style.opacity = '0'; }, 100);
+export function triggerFlash(color = "white") {
+    flashOverlay.style.backgroundColor = color;
+    flashOverlay.style.opacity = "0.4";
+    setTimeout(() => flashOverlay.style.opacity = "0", 100);
 }
 
-// 4. BACKGROUND PULSE
 export function setBackgroundPulse(color) {
-  document.body.style.boxShadow = `inset 0 0 100px ${color}22`; 
+    document.documentElement.style.setProperty('--glow', color);
 }

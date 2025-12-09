@@ -12,39 +12,35 @@
     --shadow-color: #000000;
 }
 
-/* --- THEMES (NOW AFFECTING THE BOARD!) --- */
-
-/* 1. Cyberpunk (Yellow & Pink & Purple) */
+/* --- THEMES --- */
 body.theme-cyberpunk {
     --primary: #fcee0a; /* Neon Yellow */
     --glow: #d300c5;    /* Neon Pink */
-    --board-bg: #180a18;       /* Deep Purple Background */
-    --cell-bg: #2b112b;        /* Lighter Purple Cell */
-    --border-color: #d300c566; /* Pink Borders! */
+    --board-bg: #180a18;       
+    --cell-bg: #2b112b;        
+    --border-color: #d300c566; 
 }
 body.theme-cyberpunk #mainMenu {
     background: radial-gradient(circle at center, #2b002b 0%, #000 100%);
 }
 
-/* 2. Magma (Orange & Red & Lava) */
 body.theme-magma {
     --primary: #ffaa00; /* Bright Orange */
     --glow: #ff3300;    /* Lava Red */
-    --board-bg: #1a0500;       /* Dark Burnt Red */
-    --cell-bg: #2e0e00;        /* Magma Rock Color */
-    --border-color: #ff330055; /* Glowing Red Borders */
+    --board-bg: #1a0500;       
+    --cell-bg: #2e0e00;        
+    --border-color: #ff330055; 
 }
 body.theme-magma #mainMenu {
     background: radial-gradient(circle at center, #2b1100 0%, #000 100%);
 }
 
-/* 3. Matrix (Green & Black & Code) */
 body.theme-matrix {
     --primary: #00ff41; /* Matrix Green */
     --glow: #008f11;    /* Darker Green */
-    --board-bg: #000000;       /* Pure Black */
-    --cell-bg: #001100;        /* Very Dark Green */
-    --border-color: #00ff4144; /* Digital Green Borders */
+    --board-bg: #000000;       
+    --cell-bg: #001100;        
+    --border-color: #00ff4144; 
     font-family: 'Courier New', Courier, monospace; 
 }
 body.theme-matrix #mainMenu {
@@ -61,7 +57,7 @@ html, body {
   font: 500 16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Arial;
   display: flex;
   flex-direction: column;
-  overflow: hidden;
+  overflow: hidden; /* Global scroll lock */
   transition: background-color 0.5s ease;
 }
 
@@ -74,40 +70,42 @@ h1 { margin: 18px 0 6px; color: var(--primary); text-shadow: 0 0 18px var(--glow
     width: 100vw;
     height: 100vh;
     flex-direction: column;
-    padding: 10px;
-    overflow: hidden;
+    overflow: hidden; /* Locked by default (for game) */
+    position: relative;
 }
 .screen.active { display: flex; }
 
-/* --- MAIN MENU STYLES --- */
+/* --- MAIN MENU STYLES (UPDATED FOR SCROLLING) --- */
 #mainMenu {
     align-items: center;
-    justify-content: center;
-    /* Background is handled by theme classes above */
+    overflow-y: auto; /* ALLOW SCROLLING HERE */
+    -webkit-overflow-scrolling: touch;
+    padding: 20px;
 }
 .menu-scroll {
-    overflow-y: auto;
     width: 100%;
     max-width: 500px;
-    flex: 1;
-    padding: 10px;
+    flex-shrink: 0; 
     display: flex;
     flex-direction: column;
     gap: 15px;
+    margin: auto 0;
 }
 .menu-section {
-    background: rgba(20, 20, 20, 0.8); /* Semi-transparent */
+    background: rgba(20, 20, 20, 0.85); 
     border: 1px solid var(--border-color);
     border-radius: 12px;
     padding: 15px;
+    flex-shrink: 0;
 }
 .menu-section h3 { margin-top: 0; color: var(--primary); border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
 
 .menu-footer {
-    padding: 10px;
+    padding: 20px 10px 60px 10px; /* EXTRA PADDING AT BOTTOM FOR MOBILE */
     width: 100%;
     max-width: 500px;
     display: flex; gap: 10px;
+    flex-shrink: 0;
 }
 
 /* --- GAME VIEW STYLES --- */
@@ -172,12 +170,11 @@ select, .btn, input[type="color"] {
 .status { display: flex; gap: 10px; align-items: center; margin: 8px 0 14px; }
 .badge { width: 18px; height: 18px; border-radius: 999px; box-shadow: 0 0 12px var(--glow); }
 
-/* --- THE BOARD (UPDATED WITH THEME VARS) --- */
+/* --- THE BOARD --- */
 .board {
   display: grid; 
   gap: 4px; 
   padding: 4px;
-  /* HERE IS THE MAGIC: Using variables for background and border */
   border-radius: 18px; 
   background: var(--board-bg); 
   border: 1px solid var(--border-color);
@@ -195,7 +192,6 @@ select, .btn, input[type="color"] {
   height: var(--cell-size, 50px); 
   min-width: 0; min-height: 0;
   border-radius: 14px;
-  /* HERE IS THE MAGIC: Cells use theme colors now */
   background: var(--cell-bg); 
   border: 2px solid var(--border-color); 
   display: grid; place-items: center;
