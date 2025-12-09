@@ -1,6 +1,57 @@
 /* --- BASE STYLES --- */
-:root { --cell: 62px; --gap: 6px; --glow: #ff4757; --primary: #47f2ff; }
+:root { 
+    --cell: 62px; 
+    --gap: 6px; 
+    
+    /* DEFAULT NEON THEME VARIABLES */
+    --glow: #ff4757; 
+    --primary: #47f2ff;
+    --board-bg: #0b0b0b;       /* Standard Dark Grey */
+    --cell-bg: #151515;        /* Slightly Lighter Grey */
+    --border-color: #ffffff22; /* Faint White Border */
+    --shadow-color: #000000;
+}
 
+/* --- THEMES (NOW AFFECTING THE BOARD!) --- */
+
+/* 1. Cyberpunk (Yellow & Pink & Purple) */
+body.theme-cyberpunk {
+    --primary: #fcee0a; /* Neon Yellow */
+    --glow: #d300c5;    /* Neon Pink */
+    --board-bg: #180a18;       /* Deep Purple Background */
+    --cell-bg: #2b112b;        /* Lighter Purple Cell */
+    --border-color: #d300c566; /* Pink Borders! */
+}
+body.theme-cyberpunk #mainMenu {
+    background: radial-gradient(circle at center, #2b002b 0%, #000 100%);
+}
+
+/* 2. Magma (Orange & Red & Lava) */
+body.theme-magma {
+    --primary: #ffaa00; /* Bright Orange */
+    --glow: #ff3300;    /* Lava Red */
+    --board-bg: #1a0500;       /* Dark Burnt Red */
+    --cell-bg: #2e0e00;        /* Magma Rock Color */
+    --border-color: #ff330055; /* Glowing Red Borders */
+}
+body.theme-magma #mainMenu {
+    background: radial-gradient(circle at center, #2b1100 0%, #000 100%);
+}
+
+/* 3. Matrix (Green & Black & Code) */
+body.theme-matrix {
+    --primary: #00ff41; /* Matrix Green */
+    --glow: #008f11;    /* Darker Green */
+    --board-bg: #000000;       /* Pure Black */
+    --cell-bg: #001100;        /* Very Dark Green */
+    --border-color: #00ff4144; /* Digital Green Borders */
+    font-family: 'Courier New', Courier, monospace; 
+}
+body.theme-matrix #mainMenu {
+    background: radial-gradient(circle at center, #001a00 0%, #000 100%);
+}
+
+/* --- GLOBAL LAYOUT --- */
 * { box-sizing: border-box; }
 html, body {
   min-height: 100%;
@@ -8,68 +59,151 @@ html, body {
   background: #000;
   color: #eaf2ff;
   font: 500 16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Arial;
-  display: grid;
-  place-items: start center;
-  overflow-y: auto; 
-  overflow-x: hidden; 
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
   transition: background-color 0.5s ease;
 }
 
-h1 { margin: 18px 0 6px; color: #47f2ff; text-shadow: 0 0 18px #17cfe8; }
+h1 { margin: 18px 0 6px; color: var(--primary); text-shadow: 0 0 18px var(--glow); text-align: center; }
 .wrap { width: min(1000px, 96vw); padding: 8px 10px 28px; }
 
-/* --- TOOLBAR --- */
+/* --- SCREEN SWITCHING --- */
+.screen {
+    display: none;
+    width: 100vw;
+    height: 100vh;
+    flex-direction: column;
+    padding: 10px;
+    overflow: hidden;
+}
+.screen.active { display: flex; }
+
+/* --- MAIN MENU STYLES --- */
+#mainMenu {
+    align-items: center;
+    justify-content: center;
+    /* Background is handled by theme classes above */
+}
+.menu-scroll {
+    overflow-y: auto;
+    width: 100%;
+    max-width: 500px;
+    flex: 1;
+    padding: 10px;
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+.menu-section {
+    background: rgba(20, 20, 20, 0.8); /* Semi-transparent */
+    border: 1px solid var(--border-color);
+    border-radius: 12px;
+    padding: 15px;
+}
+.menu-section h3 { margin-top: 0; color: var(--primary); border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
+
+.menu-footer {
+    padding: 10px;
+    width: 100%;
+    max-width: 500px;
+    display: flex; gap: 10px;
+}
+
+/* --- GAME VIEW STYLES --- */
+.game-header {
+    display: flex; justify-content: space-between; align-items: center;
+    width: 100%; max-width: 600px; margin: 0 auto 10px;
+    flex-shrink: 0; 
+}
+
+.board-container {
+    flex: 1; 
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    overflow: hidden; 
+    position: relative;
+}
+
+.floating-btn {
+    position: fixed; bottom: 20px; left: 20px;
+    width: 40px; height: 40px; border-radius: 50%;
+    background: #222; border: 1px solid #444; z-index: 100;
+    color: white; cursor: pointer; display: grid; place-items: center;
+}
+
+/* --- TOOLBAR & BUTTONS --- */
 .toolbar {
   display: flex; gap: 10px; align-items: center;
   margin: 8px 0 10px; flex-wrap: wrap;
 }
+.toolbar.vertical { flex-direction: column; align-items: stretch; }
+.toolbar.vertical label { justify-content: space-between; margin-bottom: 8px; }
 
 label { color: #a9bfd6; display: flex; gap: 6px; align-items: center; font-size: 0.96em; }
 
 select, .btn, input[type="color"] {
-  background: #101318; color: #eaf2ff; border: 1px solid #ffffff24;
+  background: #101318; color: #eaf2ff; border: 1px solid var(--border-color);
   border-radius: 10px; padding: 8px 10px; cursor: pointer;
 }
-.btn:hover { background: #161b24; }
+.btn:hover { background: #161b24; border-color: var(--primary); }
+.btn.large {
+    flex: 1; padding: 15px; font-size: 1.2rem; font-weight: bold;
+    background: var(--primary); color: #000; box-shadow: 0 0 15px var(--glow);
+}
+.btn.small { padding: 6px 12px; font-size: 0.9em; }
 
 .player-settings-container { margin: 10px 0; display: flex; gap: 16px; flex-wrap: wrap; }
 .player-setting {
   background: #151515; padding: 8px 12px; border-radius: 12px;
-  border: 1px solid #ffffff22; display: flex; gap: 10px; align-items: center;
+  border: 1px solid var(--border-color); display: flex; gap: 10px; align-items: center;
   flex-wrap: wrap; color: #eaf2ff; font-size: 0.96em;
 }
 .player-setting label { color: #a9bfd6; font-weight: 600; font-size: 1em; min-width: 110px; }
 .player-setting input[type="text"] {
-  background: #101318; border: 1px solid #ffffff24; border-radius: 8px;
+  background: #101318; border: 1px solid var(--border-color); border-radius: 8px;
   padding: 7px 13px; color: #eaf2ff; font-weight: 600; font-size: 1em;
   transition: border 0.2s, box-shadow 0.2s; outline: none; min-width: 94px; max-width: 140px;
 }
-.player-setting input[type="text"]:focus { border: 1.5px solid #47f2ff; box-shadow: 0 0 8px #47f2ff22; }
-.player-setting input[type="text"]::placeholder { color: #97afd6; font-weight: 500; letter-spacing: 0.2px; }
+.player-setting input[type="text"]:focus { border: 1.5px solid var(--primary); box-shadow: 0 0 8px var(--glow); }
 
 .status { display: flex; gap: 10px; align-items: center; margin: 8px 0 14px; }
 .badge { width: 18px; height: 18px; border-radius: 999px; box-shadow: 0 0 12px var(--glow); }
 
-/* --- THE BOARD (With the Magic Mobile Fix) --- */
+/* --- THE BOARD (UPDATED WITH THEME VARS) --- */
 .board {
-  display: grid; grid-auto-rows: var(--cell); gap: var(--gap); padding: var(--gap);
-  border-radius: 18px; background: #0b0b0b; border: 1px solid #ffffff18;
-  box-shadow: 0 0 22px var(--glow); animation: boardPulse 1.6s ease-in-out infinite;
-  margin: 0 auto;
-  
-  /* THIS IS THE MAGIC LINE YOU WANTED: */
+  display: grid; 
+  gap: 4px; 
+  padding: 4px;
+  /* HERE IS THE MAGIC: Using variables for background and border */
+  border-radius: 18px; 
+  background: var(--board-bg); 
+  border: 1px solid var(--border-color);
+  box-shadow: 0 0 22px var(--glow); 
+  animation: boardPulse 1.6s ease-in-out infinite;
+  margin: auto; 
   touch-action: none; 
 }
 
 @keyframes boardPulse { 0%,100%{box-shadow:0 0 16px var(--glow);} 50%{box-shadow:0 0 34px var(--glow);} }
 
 .cell {
-  position: relative; width: var(--cell); height: var(--cell); border-radius: 14px;
-  background: #151515; border: 2px solid #ffffff22; display: grid; place-items: center;
-  cursor: pointer; transition: border-color .25s ease, box-shadow .25s ease;
+  position: relative; 
+  width: var(--cell-size, 50px); 
+  height: var(--cell-size, 50px); 
+  min-width: 0; min-height: 0;
+  border-radius: 14px;
+  /* HERE IS THE MAGIC: Cells use theme colors now */
+  background: var(--cell-bg); 
+  border: 2px solid var(--border-color); 
+  display: grid; place-items: center;
+  cursor: pointer; transition: border-color .25s ease, box-shadow .25s ease, background-color 0.3s;
 }
 .cell.owned { border-color: #ffffff44; }
 .cell.pulse { box-shadow: 0 0 10px var(--glow) inset; animation: cellPulse 1.2s ease-in-out infinite; }
+.cell:focus { outline: 2px solid var(--primary); z-index: 2; }
 @keyframes cellPulse { 0%,100%{box-shadow:0 0 8px var(--glow) inset;} 50%{box-shadow:0 0 18px var(--glow) inset;} }
 
 /* --- ORBS & BOMBS --- */
@@ -82,96 +216,23 @@ select, .btn, input[type="color"] {
 .pair-improved .orb.two-orb:nth-child(2) { animation-delay: 1.25s; }
 @keyframes float-orb { 0%,100%{transform:translateY(0);} 50%{transform:translateY(-4px);} }
 
-/* Shaking Bomb Animation */
-.bombsvg { 
-  width: 120%; 
-  height: 120%; 
-  display: block; 
-  margin: 0 auto; 
-  position: relative; 
-  filter: drop-shadow(0 0 18px currentColor);
-  animation: jitter 0.1s infinite;
-}
+.bombsvg { width: 120%; height: 120%; display: block; margin: 0 auto; position: relative; filter: drop-shadow(0 0 18px currentColor); animation: jitter 0.1s infinite; }
+@keyframes jitter { 0% { transform: translate(0,0); } 25% { transform: translate(1px,1px); } 50% { transform: translate(-1px,-1px); } 75% { transform: translate(-1px,1px); } }
 
-@keyframes jitter { 
-  0% { transform: translate(0,0); } 
-  25% { transform: translate(1px,1px); } 
-  50% { transform: translate(-1px,-1px); } 
-  75% { transform: translate(-1px,1px); } 
-}
-
-/* --- NEW EFFECTS (Particles, Blocked Cells) --- */
-
-/* 1. Blocked Cells */
-.cell.blocked {
-    background: repeating-linear-gradient(
-        45deg,
-        #151515,
-        #151515 10px,
-        #222 10px,
-        #222 20px
-    );
-    cursor: default;
-    border-color: #333;
-    opacity: 0.5;
-    pointer-events: none;
-    box-shadow: none;
-    animation: none;
-}
-
-/* 2. Confetti & Sparks */
-.confetti, .spark {
-  position: fixed; width: 10px; height: 10px; background-color: var(--color);
-  top: -10px; z-index: 9999; pointer-events: none;
-  animation: fall 3s linear forwards;
-}
-.spark {
-  width: 6px; height: 6px; border-radius: 50%; 
-  box-shadow: 0 0 10px var(--color); z-index: 8000;
-  animation: none; /* JS Handles animation */
-}
+/* --- EFFECTS --- */
+.cell.blocked { background: repeating-linear-gradient(45deg, var(--cell-bg), var(--cell-bg) 10px, #000 10px, #000 20px); cursor: default; border-color: #333; opacity: 0.5; pointer-events: none; box-shadow: none; animation: none; }
+.confetti, .spark { position: fixed; width: 10px; height: 10px; background-color: var(--color); top: -10px; z-index: 9999; pointer-events: none; animation: fall 3s linear forwards; }
+.spark { width: 6px; height: 6px; border-radius: 50%; box-shadow: 0 0 10px var(--color); z-index: 8000; animation: none; }
 @keyframes fall { to { transform: translateY(105vh) rotate(720deg); } }
 
-/* 3. Screen Shake */
-@keyframes shake-hard {
-  0% { transform: translate(1px, 1px) rotate(0deg); }
-  10% { transform: translate(-1px, -2px) rotate(-1deg); }
-  20% { transform: translate(-3px, 0px) rotate(1deg); }
-  30% { transform: translate(3px, 2px) rotate(0deg); }
-  40% { transform: translate(1px, -1px) rotate(1deg); }
-  50% { transform: translate(-1px, 2px) rotate(-1deg); }
-  60% { transform: translate(-3px, 1px) rotate(0deg); }
-  100% { transform: translate(0, 0) rotate(0deg); }
-}
-.shake-active {
-  animation: shake-hard 0.4s cubic-bezier(.36,.07,.19,.97) both;
-}
+@keyframes shake-hard { 0% { transform: translate(1px, 1px) rotate(0deg); } 10% { transform: translate(-1px, -2px) rotate(-1deg); } 20% { transform: translate(-3px, 0px) rotate(1deg); } 30% { transform: translate(3px, 2px) rotate(0deg); } 40% { transform: translate(1px, -1px) rotate(1deg); } 50% { transform: translate(-1px, 2px) rotate(-1deg); } 60% { transform: translate(-3px, 1px) rotate(0deg); } 100% { transform: translate(0, 0) rotate(0deg); } }
+.shake-active { animation: shake-hard 0.4s cubic-bezier(.36,.07,.19,.97) both; }
 
-/* 4. Flash Overlay */
-#flash-overlay {
-  position: fixed;
-  top: 0; left: 0; width: 100vw; height: 100vh;
-  pointer-events: none;
-  z-index: 9000;
-  opacity: 0;
-  transition: opacity 0.1s ease-out;
-  mix-blend-mode: screen; 
-}
+#flash-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 9000; opacity: 0; transition: opacity 0.1s ease-out; mix-blend-mode: screen; }
 
-/* --- GAME OVER MODAL UI --- */
-.modal-overlay {
-  position: fixed; top: 0; left: 0; width: 100vw; height: 100vh;
-  background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px);
-  display: flex; justify-content: center; align-items: center;
-  z-index: 2000; animation: fadeIn 0.3s ease;
-}
-.modal-content {
-  background: #0a0a0a; border: 2px solid var(--primary);
-  box-shadow: 0 0 30px var(--primary), inset 0 0 20px rgba(71, 242, 255, 0.1);
-  padding: 40px; border-radius: 16px; text-align: center;
-  max-width: 450px; width: 90%; color: #fff;
-  transform: scale(0.9); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards;
-}
+/* --- MODALS --- */
+.modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 2000; animation: fadeIn 0.3s ease; }
+.modal-content { background: #0a0a0a; border: 2px solid var(--primary); box-shadow: 0 0 30px var(--primary), inset 0 0 20px rgba(71, 242, 255, 0.1); padding: 40px; border-radius: 16px; text-align: center; max-width: 450px; width: 90%; color: #fff; transform: scale(0.9); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
 .modal-title { font-size: 2.5rem; margin: 0 0 10px 0; text-shadow: 0 0 10px currentColor; font-weight: 800; }
 .modal-body { font-size: 1.1rem; margin-bottom: 30px; color: #ccc; white-space: pre-line; line-height: 1.6; }
 .modal-actions { display: flex; gap: 15px; justify-content: center; }
@@ -188,8 +249,25 @@ select, .btn, input[type="color"] {
   .player-setting { font-size: 0.95em; min-width: 140px; max-width: 99vw; }
   .player-setting label { min-width: 70px; font-size: 0.98em; }
   .player-setting input[type="text"] { min-width: 72px; max-width: 94px; font-size: 0.93em; padding: 6px 7px; }
+  .game-header { flex-wrap: wrap; gap: 10px; }
 }
-@media (max-width: 640px) { :root { --cell: 54px; --gap: 5px; } .player-setting { font-size: 0.93em; } }
-@media (max-width: 420px) { :root { --cell: 46px; --gap: 4px; } .player-setting { font-size: 0.9em; } .player-setting input[type="text"]{font-size:0.85em;} }
 
-.cell:focus { outline: 2px solid #47f2ff; z-index: 2; }
+/* --- ACHIEVEMENTS TOAST --- */
+#achievement-container { position: fixed; bottom: 20px; right: 20px; display: flex; flex-direction: column; gap: 10px; z-index: 10000; }
+.achievement-toast { background: rgba(20, 20, 20, 0.95); border: 1px solid var(--primary); border-left: 5px solid var(--primary); color: #fff; padding: 12px 16px; border-radius: 8px; display: flex; align-items: center; gap: 12px; box-shadow: 0 5px 15px rgba(0,0,0,0.5); min-width: 250px; animation: slideIn 0.5s ease-out forwards; }
+.achievement-toast.hide { animation: fadeOut 0.5s ease-in forwards; }
+.achievement-toast .icon { font-size: 1.5em; }
+.achievement-toast .title { font-weight: bold; color: var(--primary); font-size: 0.9em; }
+.achievement-toast .desc { font-size: 0.8em; color: #ccc; }
+@keyframes slideIn { from { transform: translateX(100%); opacity: 0; } to { transform: translateX(0); opacity: 1; } }
+@keyframes fadeOut { to { opacity: 0; transform: translateY(10px); } }
+
+/* --- STATS MODAL FIXED --- */
+#statsModal .modal-content { max-height: 85vh; display: flex; flex-direction: column; padding: 25px; }
+#statsBody { overflow-y: auto; flex: 1; margin-bottom: 15px; padding-right: 10px; border-bottom: 1px solid #333; }
+#statsModal .modal-actions { margin-top: 0; flex-shrink: 0; padding-top: 15px; }
+.stat-row { display: flex; justify-content: space-between; padding: 8px 0; border-bottom: 1px solid #333; }
+.stat-label { color: #aaa; }
+.stat-val { font-weight: bold; color: #fff; }
+.ach-tag { display: inline-block; padding: 4px 8px; background: #222; border: 1px solid #444; border-radius: 4px; font-size: 0.8em; margin: 4px; color: #888; }
+.ach-tag.unlocked { border-color: var(--primary); color: var(--primary); background: rgba(71, 242, 255, 0.1); }

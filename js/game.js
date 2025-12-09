@@ -1,42 +1,41 @@
-import { playSound, toggleMute } from "./sound.js"; // Imported toggleMute
+import { playSound, toggleMute } from "./sound.js";
 import { capacity, neighbors, drawCell } from "./board.js";
 import { buildPlayerSettings } from "./player.js";
 import { SAGA_LEVELS, BLISS_LEVELS } from "./levels.js"; 
 import { makeAIMove } from "./ai.js";       
 import { makeSagaAIMove } from "./ai2.js"; 
+import { makeGreedyAIMove } from "./greedy.js"; 
 import { spawnParticles, triggerShake, triggerFlash, setBackgroundPulse } from "./fx.js"; 
+// 1. IMPORT STORAGE (Updated to include Theme functions)
+import { recordGameEnd, tryUnlockAchievement, loadData, saveTheme, getSavedTheme } from "./storage.js";
 
 const $ = s => document.querySelector(s);
 const scoreDisplay = $("#scoreDisplay");
-const boardEl = $("#board"),
-  statusText = $("#statusText"),
-  turnBadge = $("#turnBadge"),
-  gridSelect = $("#gridSelect"),
-  newBtn = $("#newGameBtn"),
-  undoBtn = $("#undoBtn"),
-  // NEW: Sound Button
-  soundBtn = $("#soundBtn"), 
-  playerCountSelect = $("#playerCountSelect"),
-  modeSelect = document.getElementById("gameModeSelect"),
-  standardControls = document.getElementById("standardControls"),
-  aiSpeedSelect = document.getElementById("aiSpeedSelect"),
-  levelSelectorContainer = document.getElementById("levelSelectorContainer"),
-  levelSelect = document.getElementById("levelSelect"),
-  levelNameDisplay = document.getElementById("levelNameDisplay"),
-  timerContainer = document.getElementById("timerContainer"),
-  timerDisplay = document.getElementById("timerDisplay"),
-  timeLeftSpan = document.getElementById("timeLeft"),
-  timeUnitSpan = document.getElementById("timeUnit"),
-  timerSelect = document.getElementById("timerSelect"),
-  timerLabel = document.getElementById("timerLabel"),
-  playerSettingsContainer = document.getElementById("playerSettingsContainer");
+const boardEl = $("#board");
+const statusText = $("#statusText");
+const turnBadge = $("#turnBadge");
+const gridSelect = $("#gridSelect");
+const undoBtn = $("#undoBtn");
+const soundBtn = $("#soundBtn"); 
+const playerCountSelect = $("#playerCountSelect");
+const modeSelect = document.getElementById("gameModeSelect");
+const standardControls = document.getElementById("standardControls");
+const aiSpeedSelect = document.getElementById("aiSpeedSelect");
+const levelSelectorContainer = document.getElementById("levelSelectorContainer");
+const levelSelect = document.getElementById("levelSelect");
+const levelNameDisplay = document.getElementById("levelNameDisplay");
+const timerContainer = document.getElementById("timerContainer");
+const timerDisplay = document.getElementById("timerDisplay");
+const timeLeftSpan = document.getElementById("timeLeft");
+const timerSelect = document.getElementById("timerSelect");
+const playerSettingsContainer = document.getElementById("playerSettingsContainer");
 
 // MODAL ELEMENTS
-const gameModal = document.getElementById("gameModal"),
-      modalTitle = document.getElementById("modalTitle"),
-      modalBody = document.getElementById("modalBody"),
-      modalReplayBtn = document.getElementById("modalReplayBtn"),
-      modalNextBtn = document.getElementById("modalNextBtn");
+const gameModal = document.getElementById("gameModal");
+const modalTitle = document.getElementById("modalTitle");
+const modalBody = document.getElementById("modalBody");
+const modalReplayBtn = document.getElementById("modalReplayBtn");
+const modalNextBtn = document.getElementById("modalNextBtn");
 
 let aiMoveDelay = 1000; 
 let rows = 9, cols = 9;
@@ -53,17 +52,55 @@ let levelMaxMoves = null;
 let playerMovesRemaining = 0; 
 let eliminationOrder = [];
 
+// NEW TRACKING VARIABLES
+let gameStartTime = 0;
+let lowestCellCount = Infinity; 
+let maxChainReaction = 0;       
+
 function init() {
-  newBtn.addEventListener("click", resetGame);
+  // Hook up buttons
+  const startBtn = document.getElementById('startGameBtn');
+  if (startBtn) startBtn.addEventListener('click', startGame);
+
+  const backBtn = document.getElementById('backBtn');
+  if (backBtn) backBtn.addEventListener('click', backToMenu);
+
   undoBtn.addEventListener("click", undoMove);
   
-  // NEW: Sound Button Listener
   if(soundBtn) {
       soundBtn.addEventListener("click", () => {
           const muted = toggleMute();
           soundBtn.textContent = muted ? "🔇" : "🔊";
       });
   }
+
+  const statsBtn = document.getElementById('statsBtn');
+  if (statsBtn) statsBtn.addEventListener('click', showStats);
+  
+  const closeStatsBtn = document.getElementById('closeStatsBtn');
+  if (closeStatsBtn) closeStatsBtn.addEventListener('click', () => {
+      document.getElementById('statsModal').style.display = 'none';
+  });
+
+  // --- NEW: THEME INIT LOGIC ---
+  const themeSelect = document.getElementById('themeSelect');
+  
+  // 1. Load saved theme
+  const savedTheme = getSavedTheme();
+  if (savedTheme) {
+      applyTheme(savedTheme);
+      if (themeSelect) themeSelect.value = savedTheme;
+  }
+
+  // 2. Listen for changes
+  if (themeSelect) {
+      themeSelect.addEventListener('change', (e) => {
+          const newTheme = e.target.value;
+          applyTheme(newTheme);
+          saveTheme(newTheme); // Save to storage
+      });
+  }
+  // -----------------------------
 
   playerCountSelect.addEventListener("change", () => {
       if (mode === 'normal' || mode === 'timeAttack') {
@@ -75,13 +112,15 @@ function init() {
       aiMoveDelay = parseInt(aiSpeedSelect.value, 10);
   });
 
-  gridSelect.addEventListener("change", resetGame);
+  gridSelect.addEventListener("change", () => {
+      // Don't reset immediately, just prepare settings
+  });
+
   modeSelect.addEventListener("change", handleModeChange);
   timerSelect.addEventListener("change", handleTimerChange);
   
   levelSelect.addEventListener("change", (e) => {
       currentLevelIndex = parseInt(e.target.value, 10);
-      resetGame();
   });
 
   modalReplayBtn.addEventListener("click", () => {
@@ -97,16 +136,68 @@ function init() {
           levelSelect.value = currentLevelIndex;
           resetGame();
       } else {
-          alert("You have completed all levels! Resetting to start.");
+          alert("All levels completed!");
           currentLevelIndex = 0;
           levelSelect.value = 0;
-          resetGame();
+          backToMenu();
       }
   });
 
   if(aiSpeedSelect) aiMoveDelay = parseInt(aiSpeedSelect.value, 10);
 
   handleModeChange();
+  
+  window.addEventListener('resize', () => {
+      if (document.getElementById('gameView').classList.contains('active')) {
+          resizeBoard();
+      }
+  });
+}
+
+// --- NEW: THEME HELPER FUNCTION ---
+function applyTheme(themeName) {
+    // Remove all known theme classes first
+    document.body.classList.remove('theme-cyberpunk', 'theme-magma', 'theme-matrix');
+    
+    // Add the new one (unless it's default)
+    if (themeName !== 'default') {
+        document.body.classList.add(themeName);
+    }
+}
+// ----------------------------------
+
+function startGame() {
+    document.getElementById('mainMenu').classList.remove('active');
+    document.getElementById('gameView').classList.add('active');
+    resetGame();
+    setTimeout(resizeBoard, 50); 
+}
+
+function backToMenu() {
+    playing = false; 
+    clearTimeout(aiTimeout);
+    closeModal();
+    document.getElementById('gameView').classList.remove('active');
+    document.getElementById('mainMenu').classList.add('active');
+}
+
+function resizeBoard() {
+    const container = document.querySelector('.board-container');
+    if (!container) return;
+    
+    const w = container.clientWidth;
+    const h = container.clientHeight;
+    
+    const sizeByWidth = (w - 20) / cols;
+    const sizeByHeight = (h - 20) / rows;
+    
+    const cellSize = Math.floor(Math.min(sizeByWidth, sizeByHeight)) - 2; 
+    
+    if (boardEl) {
+        boardEl.style.setProperty('--cell-size', `${cellSize}px`);
+        boardEl.style.gridTemplateColumns = `repeat(${cols}, ${cellSize}px)`;
+        boardEl.style.gridAutoRows = `${cellSize}px`;
+    }
 }
 
 function closeModal() {
@@ -159,12 +250,14 @@ function setupPlayers(count) {
         actualCount,
         players, 
         playerTypes, 
-        resetGame, 
+        () => {}, 
         (triggerAI) => { 
-            updateStatus(); 
-            renderScores(); 
-            if (triggerAI) processTurn();
-            else paintAll();
+            if(document.getElementById('gameView').classList.contains('active')) {
+                updateStatus(); 
+                renderScores(); 
+                if (triggerAI) processTurn();
+                else paintAll();
+            }
         },
         current
     );
@@ -180,8 +273,6 @@ function handleModeChange() {
     if (isTimeAttack) {
         timerContainer.style.display = "inline-block";
         timerSelect.style.display = "inline-block";
-        timerLabel.textContent = "Timer:";
-        timeUnitSpan.textContent = "s";
     }
 
     if (isCustomMode) {
@@ -196,15 +287,18 @@ function handleModeChange() {
         levelSelectorContainer.style.display = 'none';
         setupPlayers(parseInt(playerCountSelect.value, 10));
     }
-    resetGame();
 }
 
 function handleTimerChange() {
-    if (mode === "timeAttack") resetGame();
+    // Just update variable
 }
 
 function resetGame() {
   closeModal(); 
+
+  gameStartTime = Date.now();
+  lowestCellCount = Infinity;
+  maxChainReaction = 0;
 
   let initialCols, initialRows;
   let blockedCoords = [];
@@ -233,9 +327,7 @@ function resetGame() {
           playerMovesRemaining = levelMaxMoves;
           timerContainer.style.display = "inline-block";
           timerSelect.style.display = "none";
-          timerLabel.textContent = "Moves Left:";
           timeLeftSpan.textContent = playerMovesRemaining;
-          timeUnitSpan.textContent = "";
       } else {
           timerContainer.style.display = "none";
       }
@@ -246,9 +338,7 @@ function resetGame() {
       initialRows = r;
       if (mode === 'timeAttack') {
           timerContainer.style.display = "inline-block";
-          timerSelect.style.display = "inline-block";
-          timerLabel.textContent = "Time:";
-          timeUnitSpan.textContent = "s";
+          timerSelect.style.display = "none"; 
       }
   }
 
@@ -278,8 +368,10 @@ function resetGame() {
       }
   }
   
-  boardEl.style.gridTemplateColumns = `repeat(${cols}, var(--cell))`;
   boardEl.innerHTML = "";
+  boardEl.style.gridTemplateColumns = ""; 
+  boardEl.style.gridAutoRows = "";
+
   for (let y = 0; y < rows; y++) {
     for (let x = 0; x < cols; x++) {
       const cell = document.createElement("button");
@@ -308,6 +400,8 @@ function resetGame() {
   
   paintAll();
   processTurn();
+  
+  resizeBoard();
 }
 
 function startTimer() {
@@ -361,7 +455,10 @@ function processTurn() {
   
   aiTimeout = setTimeout(() => {
     let move;
-    if (mode === 'saga' || mode === 'bliss') {
+    
+    if (p.difficulty === 'greedy') {
+        move = makeGreedyAIMove(board, current, rows, cols); 
+    } else if (mode === 'saga' || mode === 'bliss') {
         move = makeSagaAIMove(board, current, p.difficulty, rows, cols, players.length);
     } else {
         move = makeAIMove(board, current, p.difficulty, rows, cols, players.length);
@@ -433,6 +530,12 @@ async function resolveReactions() {
     q.length = 0;
     const toInc = [];
 
+    let reactionSize = wave.length;
+    maxChainReaction += reactionSize;
+    if (maxChainReaction >= 50) {
+        tryUnlockAchievement('nuclear', 'Nuclear Launch', 'Trigger a reaction of 50+ atoms');
+    }
+
     if (loopCount > 3) triggerShake(); 
     if (loopCount > 8) triggerFlash(players[current].color); 
 
@@ -496,6 +599,12 @@ function updateScores() {
       const o = board[y][x].owner;
       if (o !== -1) scores[o] += board[y][x].count;
     }
+
+  const myCells = scores[0]; 
+  if (myCells > 0 && myCells < lowestCellCount) {
+      lowestCellCount = myCells;
+  }
+
   renderScores();
 }
 
@@ -562,12 +671,18 @@ function checkWin() {
       if (alive.length === 1) {
           if (alive[0].idx === 0) {
             playing = false;
+            
+            if (playerTypes[1] && playerTypes[1].type === 'ai') {
+                recordGameEnd(0, playerTypes[1].difficulty);
+            }
+
             showGameOver("Level Complete!", "Excellent strategy! You defeated the AI.", true);
             playSound("win");
             launchConfetti(players[0].color);
             return true;
           } else {
              playing = false;
+             recordGameEnd(1, null);
              showGameOver("Level Failed", "The AI has conquered the board.", false);
              return true;
           }
@@ -597,6 +712,22 @@ function checkWin() {
       playing = false;
       const w = alive[0].idx;
       const winnerName = players[w].name?.trim() || `Player ${w+1}`;
+
+      if (w === 0) { 
+          const aiDiff = (playerTypes[1] && playerTypes[1].type === 'ai') ? playerTypes[1].difficulty : null;
+          recordGameEnd(0, aiDiff);
+          
+          const timeTaken = (Date.now() - gameStartTime) / 1000;
+          if (timeTaken < 60) {
+              tryUnlockAchievement('speed', 'Speed Demon', 'Win a game in under 60 seconds');
+          }
+      
+          if (lowestCellCount <= 1) {
+              tryUnlockAchievement('underdog', 'Underdog', 'Win after dropping to 1 orb');
+          }
+      } else {
+          recordGameEnd(w, null);
+      }
       
       let rankText = `🏆 <b>${winnerName} Wins!</b><br><br>`;
       
@@ -621,6 +752,31 @@ function checkWin() {
       return true;
   }
   return false;
+}
+
+function showStats() {
+    const data = loadData();
+    const body = document.getElementById('statsBody');
+    
+    const isUn = (id) => data.achievements.includes(id) ? 'unlocked' : '';
+    
+    body.innerHTML = `
+        <div class="stat-row"><span class="stat-label">Total Games:</span> <span class="stat-val">${data.stats.matches}</span></div>
+        <div class="stat-row"><span class="stat-label">Losses:</span> <span class="stat-val" style="color:#ff4757">${data.stats.losses}</span></div>
+        <hr style="border-color:#333; margin:10px 0">
+        <div class="stat-row"><span class="stat-label">Easy Wins:</span> <span class="stat-val">${data.stats.wins.easy || 0}</span></div>
+        <div class="stat-row"><span class="stat-label">Aggressive Wins:</span> <span class="stat-val">${data.stats.wins.greedy || 0}</span></div>
+        <div class="stat-row"><span class="stat-label">Hard Wins:</span> <span class="stat-val" style="color:var(--primary)">${data.stats.wins.hard || 0}</span></div>
+        <br>
+        <h4>Achievements</h4>
+        <div>
+            <span class="ach-tag ${isUn('speed')}">⚡ Speed Demon</span>
+            <span class="ach-tag ${isUn('nuclear')}">☢️ Nuclear</span>
+            <span class="ach-tag ${isUn('underdog')}">🐕 Underdog</span>
+        </div>
+    `;
+    
+    document.getElementById('statsModal').style.display = 'flex';
 }
 
 init();

@@ -29,12 +29,14 @@ export function buildPlayerSettings(count, players, playerTypes, resetFunc, upda
     labelName.appendChild(nameInput);
 
     const typeSelect = el("select", "");
+    // --- NEW PERSONALITY MENU ---
     typeSelect.innerHTML = `
       <option value="human" ${playerTypes[i].type === 'human' ? 'selected' : ''}>Human</option>
-      <option value="easy" ${playerTypes[i].difficulty === 'easy' ? 'selected' : ''}>AI Easy</option>
-      <option value="medium" ${playerTypes[i].difficulty === 'medium' ? 'selected' : ''}>AI Medium</option>
-      <option value="hard" ${playerTypes[i].difficulty === 'hard' ? 'selected' : ''}>AI Hard</option>
+      <option value="easy" ${playerTypes[i].difficulty === 'easy' ? 'selected' : ''}>Easy (Smart)</option>
+      <option value="greedy" ${playerTypes[i].difficulty === 'greedy' ? 'selected' : ''}>Medium (Aggressive)</option>
+      <option value="hard" ${playerTypes[i].difficulty === 'hard' ? 'selected' : ''}>Hard (Master)</option>
     `;
+    // ----------------------------
     
     const labelP = el("label", ""); labelP.textContent = ` Color: `;
     const colorInput = el("input", "", { type: "color", value: players[i].color });

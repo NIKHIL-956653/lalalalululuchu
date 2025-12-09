@@ -2,92 +2,102 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8" />
-  <meta name="viewport" content="width=device-width, initial-scale=1" />
+  <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
   <title>Neon Chain Reaction</title>
   <link rel="stylesheet" href="style.css" />
 </head>
 <body>
-  <main class="wrap">
+
+  <div id="mainMenu" class="screen active">
     <h1>Neon Chain Reaction</h1>
+    
+    <div class="menu-scroll">
+        <div class="menu-section">
+            <h3>Game Setup</h3>
+            <div class="toolbar vertical">
+                <label>Mode:
+                    <select id="gameModeSelect">
+                        <option value="normal" selected>Normal</option>
+                        <option value="timeAttack">Time Attack</option>
+                        <option value="saga">Saga Mode</option>
+                        <option value="bliss">Bliss Mode</option>
+                    </select>
+                </label>
 
-    <div class="toolbar">
-      <span id="standardControls">
-          <label>Grid
-            <select id="gridSelect">
-              <option value="6x6">6×6</option>
-              <option value="7x7">7×7</option>
-              <option value="8x8">8×8</option>
-              <option value="8x8">7×12</option>
-              <option value="9x9" selected>9×9</option>
-              <option value="10x10">10×10</option>
-            </select>
-          </label>
+                <label>Theme:
+                    <select id="themeSelect">
+                        <option value="default" selected>Classic Neon</option>
+                        <option value="theme-cyberpunk">Cyberpunk 2077</option>
+                        <option value="theme-magma">Magma Core</option>
+                        <option value="theme-matrix">The Matrix</option>
+                    </select>
+                </label>
+                <div id="standardControls">
+                    <label>Grid Size:
+                        <select id="gridSelect">
+                            <option value="6x6">6×6 (Quick)</option>
+                            <option value="9x9" selected>9×9 (Standard)</option>
+                            <option value="12x12">12×12 (Epic)</option>
+                        </select>
+                    </label>
+                    <label>Players:
+                        <select id="playerCountSelect">
+                            <option value="2" selected>2 Players</option>
+                            <option value="3">3 Players</option>
+                            <option value="4">4 Players</option>
+                        </select>
+                    </label>
+                    <label>AI Speed:
+                        <select id="aiSpeedSelect">
+                            <option value="300">Fast ⚡</option>
+                            <option value="1000" selected>Normal</option>
+                        </select>
+                    </label>
+                </div>
+            </div>
+            
+            <div id="levelSelectorContainer" style="display: none;">
+                <label>Level: <select id="levelSelect"></select></label>
+                <div id="levelNameDisplay" style="color:var(--primary); margin-top:5px;"></div>
+            </div>
+        </div>
 
-          <label>Players
-            <select id="playerCountSelect">
-              <option value="2" selected>2</option>
-              <option value="3">3</option>
-              <option value="4">4</option>
-              <option value="5">5</option>
-              <option value="6">6</option>
-            </select>
-          </label>
-
-          <label>AI Speed
-            <select id="aiSpeedSelect">
-              <option value="300">Fast ⚡</option>
-              <option value="1000" selected>Normal</option>
-              <option value="2000">Slow 🐢</option>
-            </select>
-          </label>
-      </span>
-
-      <label id="modeLabel">Mode:</label>
-      <select id="gameModeSelect" style="margin-left: 10px;">
-        <option value="normal" selected>Normal</option>
-        <option value="timeAttack">Time Attack</option>
-        <option value="saga">Saga Mode</option>
-        <option value="bliss">Bliss Mode</option>
-      </select>
-
-      <span id="timerContainer" style="display:none; margin-left: 10px;">
-        <label id="timerLabel">Timer:</label>
-        <select id="timerSelect" style="margin-left: 5px;">
-            <option value="120" selected>2m</option>
-            <option value="300">5m</option>
-        </select>
-        <span id="timerDisplay" style="margin-left:10px; color:#47f2ff; font-weight:bold;">
-            <span id="timeLeft">120</span> <span id="timeUnit">s</span>
-        </span>
-      </span>
-
-      <button id="newGameBtn" class="btn">New Game</button>
-      <button id="undoBtn" class="btn">Undo</button>
-      <button id="soundBtn" class="btn">🔊</button>
+        <div class="menu-section">
+            <h3>Player Config</h3>
+            <div id="playerSettingsContainer" class="player-settings-container"></div>
+        </div>
     </div>
 
-    <div class="toolbar" id="levelSelectorContainer" style="display: none; margin-top: 15px;">
-      <label>
-        Level: <select id="levelSelect"></select>
-      </label>
-      <span id="levelNameDisplay" style="margin-left: 20px; font-weight: 600; color: #fff;"></span>
+    <div class="menu-footer">
+        <button id="startGameBtn" class="btn large primary">🚀 START GAME</button>
+        <button id="statsBtn" class="btn">📊 Stats</button>
+    </div>
+  </div>
+
+
+  <div id="gameView" class="screen">
+    <div class="game-header">
+        <button id="backBtn" class="btn small">⬅ Menu</button>
+        <div class="status-bar">
+            <span id="turnBadge" class="badge"></span>
+            <span id="statusText">Player 1</span>
+        </div>
+        <div id="timerContainer" style="display:none;">
+            <span id="timerDisplay"><span id="timeLeft"></span>s</span>
+        </div>
+        <button id="undoBtn" class="btn small">Undo</button>
     </div>
 
-    <div id="playerSettingsContainer" class="player-settings-container"></div>
+    <div id="scoreBoard">Scores: <span id="scoreDisplay"></span></div>
 
-    <div class="status">
-      <span id="turnBadge" class="badge"></span>
-      <span id="statusText">Loading…</span>
+    <div class="board-container">
+        <div id="board" class="board"></div>
     </div>
-
-    <div id="scoreBoard" style="margin-top: 14px; color: #47f2ff; font-weight: 600;">
-      Scores: <span id="scoreDisplay"></span>
-    </div>
-
-    <div id="board" class="board"></div>
-
-    <p><small>Tap cells to play. Up to 6 human or AI players, local turns.</small></p>
-  </main>
+    
+    <select id="timerSelect" style="display:none;"><option value="120">2m</option></select>
+    
+    <button id="soundBtn" class="floating-btn">🔊</button>
+  </div>
 
   <div id="gameModal" class="modal-overlay" style="display: none;">
     <div class="modal-content">
@@ -96,6 +106,18 @@
       <div class="modal-actions">
         <button id="modalReplayBtn" class="modal-btn secondary">Play Again</button>
         <button id="modalNextBtn" class="modal-btn primary">Next Level ➡</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="achievement-container"></div>
+
+  <div id="statsModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <h2 class="modal-title">Career Stats</h2>
+      <div id="statsBody" class="modal-body" style="text-align: left;"></div>
+      <div class="modal-actions">
+        <button id="closeStatsBtn" class="modal-btn primary">Close</button>
       </div>
     </div>
   </div>
