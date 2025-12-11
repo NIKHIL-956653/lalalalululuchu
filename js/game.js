@@ -2,7 +2,7 @@ import { playSound, toggleMute } from "./sound.js";
 import { capacity, neighbors, drawCell } from "./board.js";
 import { buildPlayerSettings } from "./player.js";
 import { SAGA_LEVELS, BLISS_LEVELS } from "./levels.js"; 
-import { makeAIMove } from "./ai.js";       
+import { makeAIMove } from "./ai.js";        
 import { makeSagaAIMove } from "./ai2.js"; 
 import { makeGreedyAIMove } from "./greedy.js"; 
 import { spawnParticles, triggerShake, triggerFlash, setBackgroundPulse, triggerChainFever } from "./fx.js"; 
@@ -51,14 +51,18 @@ let aiTimeout = null;
 
 // SAGA/BLISS STATE
 let currentLevelIndex = 0;
-let levelMaxMoves = null;     
+let levelMaxMoves = null;      
 let playerMovesRemaining = 0; 
 let eliminationOrder = [];
 
 // TRACKING VARIABLES
 let gameStartTime = 0;
 let lowestCellCount = Infinity; 
-let maxChainReaction = 0;       
+let maxChainReaction = 0;        
+
+// --- NEW HINT VARIABLES ---
+let hintsRemaining = 0;
+let isWatchingAd = false;
 
 function init() {
   const startBtn = document.getElementById('startGameBtn');
@@ -75,6 +79,18 @@ function init() {
           soundBtn.textContent = muted ? "🔇" : "🔊";
       });
   }
+
+  // --- HINT & AD LISTENERS ---
+  const hintBtn = document.getElementById('hintBtn');
+  const watchAdBtn = document.getElementById('watchAdBtn');
+  const closeAdBtn = document.getElementById('closeAdBtn');
+
+  if(hintBtn) hintBtn.addEventListener('click', useHint);
+  if(watchAdBtn) watchAdBtn.addEventListener('click', playFakeAd);
+  if(closeAdBtn) closeAdBtn.addEventListener('click', () => {
+      document.getElementById('adModal').style.display = 'none';
+  });
+  // ---------------------------
 
   const statsBtn = document.getElementById('statsBtn');
   if (statsBtn) statsBtn.addEventListener('click', showStats);
@@ -159,19 +175,43 @@ function applyTheme(themeName) {
     }
 }
 
+// --- FIXED STARTGAME (Menu Fix Included) ---
 function startGame() {
-    document.getElementById('mainMenu').classList.remove('active');
-    document.getElementById('gameView').classList.add('active');
+    // 1. Force hide the menu
+    const menu = document.getElementById('mainMenu');
+    if (menu) {
+        menu.classList.remove('active');
+        menu.style.display = 'none'; // Critical for fixing stuck menu
+    }
+
+    // 2. Show Game
+    const gameView = document.getElementById('gameView');
+    if (gameView) {
+        gameView.classList.add('active');
+    }
+
     resetGame();
     setTimeout(resizeBoard, 50); 
 }
 
+// --- FIXED BACKTOMENU (Menu Fix Included) ---
 function backToMenu() {
     playing = false; 
     clearTimeout(aiTimeout);
     closeModal();
-    document.getElementById('gameView').classList.remove('active');
-    document.getElementById('mainMenu').classList.add('active');
+    
+    // 1. Hide Game
+    const gameView = document.getElementById('gameView');
+    if (gameView) {
+        gameView.classList.remove('active');
+    }
+
+    // 2. Force Show Menu
+    const menu = document.getElementById('mainMenu');
+    if (menu) {
+        menu.classList.add('active');
+        menu.style.display = 'flex'; // Critical for fixing stuck menu
+    }
 }
 
 function resizeBoard() {
@@ -286,6 +326,9 @@ function resetGame() {
   gameStartTime = Date.now();
   lowestCellCount = Infinity;
   maxChainReaction = 0;
+
+  // Ensure Hint UI is up to date on reset
+  updateHintUI();
 
   let initialCols, initialRows;
   let blockedCoords = [];
@@ -800,6 +843,91 @@ function showStats() {
         </div>
     `;
     document.getElementById('statsModal').style.display = 'flex';
+}
+
+// --- HINT SYSTEM LOGIC ---
+
+function useHint() {
+    if (!playing || playerTypes[current].type === 'ai') return;
+
+    // If no hints left, offer the Ad
+    if (hintsRemaining <= 0) {
+        document.getElementById('adModal').style.display = 'flex';
+        return;
+    }
+
+    // 1. Calculate the Best Move for the Human
+    // We use "hard" difficulty to get the best possible advice
+    // Note: We pass 'current' (human index) so the AI thinks like the human
+    const bestMove = makeAIMove(board, current, "hard", rows, cols, players.length);
+
+    if (bestMove) {
+        // 2. Decrement Hint Count
+        hintsRemaining--;
+        updateHintUI();
+
+        // 3. Highlight the Cell
+        const cellIndex = bestMove.y * cols + bestMove.x;
+        const cellEl = boardEl.children[cellIndex];
+        
+        if (cellEl) {
+            // Remove existing hints first
+            document.querySelectorAll('.hint-active').forEach(el => el.classList.remove('hint-active'));
+            
+            // Add pulse effect
+            cellEl.classList.add('hint-active');
+            
+            // Show HUD message
+            showGameNotification("Try this move! 💡", "#ffd700");
+
+            // Remove hint after 3 seconds or on click
+            setTimeout(() => cellEl.classList.remove('hint-active'), 3000);
+        }
+    }
+}
+
+function playFakeAd() {
+    if (isWatchingAd) return;
+    isWatchingAd = true;
+    
+    const adBar = document.getElementById('adBar');
+    const container = document.getElementById('adProgressContainer');
+    const btns = document.querySelector('#adModal .modal-actions');
+    
+    container.style.display = 'block';
+    btns.style.display = 'none'; // Hide buttons so they can't close it
+    
+    let width = 0;
+    const interval = setInterval(() => {
+        width += 2; // Speed of ad
+        adBar.style.width = width + '%';
+        
+        if (width >= 100) {
+            clearInterval(interval);
+            finishAd();
+        }
+    }, 50); // 50ms * 50 steps = 2.5 seconds ad
+}
+
+function finishAd() {
+    isWatchingAd = false;
+    document.getElementById('adModal').style.display = 'none';
+    
+    // Reset Ad UI for next time
+    document.getElementById('adProgressContainer').style.display = 'none';
+    document.getElementById('adBar').style.width = '0%';
+    document.querySelector('#adModal .modal-actions').style.display = 'flex';
+
+    // Reward Player
+    hintsRemaining += 5;
+    updateHintUI();
+    playSound('win'); // Happy sound!
+    showGameNotification("5 Hints Added! 💡", "#ffd700");
+}
+
+function updateHintUI() {
+    const el = document.getElementById('hintCount');
+    if (el) el.textContent = hintsRemaining;
 }
 
 init();

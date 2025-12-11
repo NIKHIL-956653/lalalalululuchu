@@ -5,10 +5,31 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
   <title>Neon Chain Reaction</title>
   <link rel="stylesheet" href="style.css" />
+  <style>
+    /* Inline Critical CSS for Loader to ensure it appears instantly */
+    #loader {
+      position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+      background: #000; z-index: 10000;
+      display: flex; flex-direction: column; align-items: center; justify-content: center;
+      transition: opacity 0.5s ease-out;
+    }
+    .spinner {
+      width: 50px; height: 50px;
+      border: 5px solid #333; border-top: 5px solid #00ffcc;
+      border-radius: 50%; animation: spin 1s linear infinite; margin-bottom: 20px;
+    }
+    @keyframes spin { 0% { transform: rotate(0deg); } 100% { transform: rotate(360deg); } }
+    .loading-text { color: #00ffcc; font-family: sans-serif; letter-spacing: 2px; }
+  </style>
 </head>
 <body>
 
-  <div id="mainMenu" class="screen active">
+  <div id="loader">
+    <div class="spinner"></div>
+    <div class="loading-text">INITIALIZING...</div>
+  </div>
+
+  <div id="mainMenu" class="screen active" style="display:none;"> 
     <h1>Neon Chain Reaction</h1>
     
     <div class="menu-scroll">
@@ -85,6 +106,10 @@
             <span id="statusText">Player 1</span>
         </div>
 
+        <button id="hintBtn" class="btn small" style="border-color: #ffd700; color: #ffd700; margin-right:5px;">
+            💡 <span id="hintCount">0</span>
+        </button>
+
         <div id="timerContainer" style="display:none;">
             <span id="timerDisplay"><span id="timeLeft"></span>s</span>
         </div>
@@ -93,9 +118,7 @@
 
     <div class="hud-container">
         <div id="hudMessage" class="hud-message"></div>
-        
-        <div id="territoryMeter" class="territory-meter">
-            </div>
+        <div id="territoryMeter" class="territory-meter"></div>
     </div>
 
     <div id="scoreBoard" style="display:none;">Scores: <span id="scoreDisplay"></span></div>
@@ -121,7 +144,27 @@
     </div>
   </div>
 
+  <div id="adModal" class="modal-overlay" style="display: none;">
+    <div class="modal-content">
+      <h2 class="modal-title" style="color: #ffd700;">Need Help?</h2>
+      <p style="margin-bottom: 20px;">Watch a short ad to get <b>5 Hints</b>!</p>
+      
+      <div id="adProgressContainer" style="display:none; margin: 20px 0;">
+          <div style="background:#333; height:10px; border-radius:5px; overflow:hidden;">
+              <div id="adBar" style="width:0%; height:100%; background:#00ffcc; transition:width 0.1s linear;"></div>
+          </div>
+          <p style="font-size:0.8em; color:#888; margin-top:5px;">Playing Ad...</p>
+      </div>
+
+      <div class="modal-actions">
+        <button id="closeAdBtn" class="modal-btn secondary">No Thanks</button>
+        <button id="watchAdBtn" class="modal-btn primary" style="background:#ffd700; color:black;">📺 Watch Ad</button>
+      </div>
+    </div>
+  </div>
+
   <div id="achievement-container"></div>
+  
   <div id="statsModal" class="modal-overlay" style="display: none;">
     <div class="modal-content">
       <h2 class="modal-title">Career Stats</h2>
@@ -133,5 +176,24 @@
   </div>
 
   <script type="module" src="js/game.js"></script>
+
+  <script>
+    window.onload = function() {
+        // Wait 1.5 seconds, then verify the loader is gone
+        setTimeout(() => {
+            const loader = document.getElementById('loader');
+            const menu = document.getElementById('mainMenu');
+            if(loader) {
+                // If loader is still there, forcibly remove it
+                loader.style.opacity = '0';
+                setTimeout(() => { 
+                    loader.style.display = 'none'; 
+                    // Make sure the menu is visible
+                    if(menu) menu.style.display = 'flex'; 
+                }, 500);
+            }
+        }, 1500); 
+    };
+  </script>
 </body>
 </html>

@@ -1,13 +1,9 @@
 /* --- BASE STYLES --- */
 :root { 
-    --cell: 62px; 
-    --gap: 6px; 
-    --glow: #ff4757; 
-    --primary: #47f2ff;
-    --board-bg: #0b0b0b;       
-    --cell-bg: #151515;        
-    --border-color: #ffffff22; 
-    --shadow-color: #000000;
+    --cell: 62px; --gap: 6px; 
+    --glow: #ff4757; --primary: #47f2ff;
+    --board-bg: #0b0b0b; --cell-bg: #151515; 
+    --border-color: #ffffff22; --shadow-color: #000000;
 }
 
 /* --- THEMES --- */
@@ -53,36 +49,30 @@ h1 { margin: 18px 0 6px; color: var(--primary); text-shadow: 0 0 18px var(--glow
 .menu-section h3 { margin-top: 0; color: var(--primary); border-bottom: 1px solid var(--border-color); padding-bottom: 8px; }
 .menu-footer { padding: 20px 10px 60px 10px; width: 100%; max-width: 500px; display: flex; gap: 10px; flex-shrink: 0; }
 
-/* --- GAME VIEW & HUD (NEW) --- */
+/* --- GAME VIEW & HUD --- */
 .game-header { display: flex; justify-content: space-between; align-items: center; width: 100%; max-width: 600px; margin: 0 auto 5px; flex-shrink: 0; padding: 0 10px; }
 
-/* NEW HUD CONTAINER */
 .hud-container {
     width: 100%; max-width: 600px; margin: 0 auto 10px;
-    display: flex; flex-direction: column; gap: 4px;
-    padding: 0 10px;
+    display: flex; flex-direction: column; gap: 4px; padding: 0 10px;
 }
 
-/* 1. NOTIFICATION AREA */
+/* HUD Messages (Replaces floating text) */
 .hud-message {
-    height: 24px; text-align: center;
-    font-weight: 800; text-transform: uppercase; letter-spacing: 1px;
-    color: #fff; text-shadow: 0 0 10px var(--glow);
-    opacity: 0; transition: opacity 0.2s;
+    height: 24px; text-align: center; font-weight: 800; text-transform: uppercase; letter-spacing: 1px;
+    color: #fff; text-shadow: 0 0 10px var(--glow); opacity: 0; transition: opacity 0.2s;
 }
 .hud-message.active { opacity: 1; animation: popText 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
 @keyframes popText { 0% { transform: scale(0.5); } 100% { transform: scale(1); } }
 
-/* 2. TERRITORY METER */
+/* Territory Meter */
 .territory-meter {
-    height: 12px; width: 100%;
-    background: #222; border-radius: 6px;
-    overflow: hidden; display: flex;
-    border: 1px solid #444;
+    height: 12px; width: 100%; background: #222; border-radius: 6px;
+    overflow: hidden; display: flex; border: 1px solid #444;
 }
 .meter-bar { height: 100%; transition: width 0.4s ease-out; }
 
-/* --- BOARD --- */
+/* --- BOARD CONTAINER --- */
 .board-container { flex: 1; display: flex; justify-content: center; align-items: center; width: 100%; overflow: hidden; position: relative; }
 .floating-btn { position: fixed; bottom: 20px; left: 20px; width: 40px; height: 40px; border-radius: 50%; background: #222; border: 1px solid #444; z-index: 100; color: white; cursor: pointer; display: grid; place-items: center; }
 
@@ -96,10 +86,24 @@ select, .btn, input[type="color"] { background: #101318; color: #eaf2ff; border:
 .btn.large { flex: 1; padding: 15px; font-size: 1.2rem; font-weight: bold; background: var(--primary); color: #000; box-shadow: 0 0 15px var(--glow); }
 .btn.small { padding: 6px 12px; font-size: 0.9em; }
 
+/* FIXED PLAYER SETTINGS LAYOUT */
 .player-settings-container { margin: 10px 0; display: flex; gap: 16px; flex-wrap: wrap; }
-.player-setting { background: #151515; padding: 8px 12px; border-radius: 12px; border: 1px solid var(--border-color); display: flex; gap: 10px; align-items: center; flex-wrap: wrap; color: #eaf2ff; font-size: 0.96em; }
-.player-setting label { color: #a9bfd6; font-weight: 600; font-size: 1em; min-width: 110px; }
-.player-setting input[type="text"] { background: #101318; border: 1px solid var(--border-color); border-radius: 8px; padding: 7px 13px; color: #eaf2ff; font-weight: 600; font-size: 1em; transition: border 0.2s, box-shadow 0.2s; outline: none; min-width: 94px; max-width: 140px; }
+.player-setting {
+  background: #151515; padding: 12px; border-radius: 12px;
+  border: 1px solid var(--border-color); display: flex; gap: 10px; align-items: center;
+  flex-wrap: wrap; color: #eaf2ff; font-size: 0.96em;
+}
+.player-setting label { 
+    color: #a9bfd6; font-weight: 600; font-size: 1em; 
+    min-width: 100px; /* Give labels more space */
+}
+.player-setting input[type="text"] {
+  background: #101318; border: 1px solid var(--border-color); border-radius: 8px;
+  padding: 8px 12px; color: #eaf2ff; font-weight: 600; font-size: 1em;
+  transition: border 0.2s, box-shadow 0.2s; outline: none; 
+  flex: 1; /* Allow input to fill space */
+  min-width: 120px; /* Ensure it doesn't get too small */
+}
 .player-setting input[type="text"]:focus { border: 1.5px solid var(--primary); box-shadow: 0 0 8px var(--glow); }
 
 .status { display: flex; gap: 10px; align-items: center; margin: 8px 0 14px; }
@@ -114,6 +118,7 @@ select, .btn, input[type="color"] { background: #101318; color: #eaf2ff; border:
 .cell:focus { outline: 2px solid var(--primary); z-index: 2; }
 @keyframes cellPulse { 0%,100%{box-shadow:0 0 8px var(--glow) inset;} 50%{box-shadow:0 0 18px var(--glow) inset;} }
 
+/* --- ORBS & BOMBS --- */
 .orb { width: 68%; height: 68%; border-radius: 999px; position: relative; filter: drop-shadow(0 3px 8px #000a); }
 .orb::after { content:""; position:absolute; inset:0; border-radius:999px; box-shadow:0 0 16px currentColor; }
 .orb.one { background: currentColor; }
@@ -124,6 +129,7 @@ select, .btn, input[type="color"] { background: #101318; color: #eaf2ff; border:
 .bombsvg { width: 120%; height: 120%; display: block; margin: 0 auto; position: relative; filter: drop-shadow(0 0 18px currentColor); animation: jitter 0.1s infinite; }
 @keyframes jitter { 0% { transform: translate(0,0); } 25% { transform: translate(1px,1px); } 50% { transform: translate(-1px,-1px); } 75% { transform: translate(-1px,1px); } }
 
+/* --- EFFECTS --- */
 .cell.blocked { background: repeating-linear-gradient(45deg, var(--cell-bg), var(--cell-bg) 10px, #000 10px, #000 20px); cursor: default; border-color: #333; opacity: 0.5; pointer-events: none; box-shadow: none; animation: none; }
 .confetti, .spark { position: fixed; width: 10px; height: 10px; background-color: var(--color); top: -10px; z-index: 9999; pointer-events: none; animation: fall 3s linear forwards; }
 .spark { width: 6px; height: 6px; border-radius: 50%; box-shadow: 0 0 10px var(--color); z-index: 8000; animation: none; }
@@ -132,7 +138,13 @@ select, .btn, input[type="color"] { background: #101318; color: #eaf2ff; border:
 .shake-active { animation: shake-hard 0.4s cubic-bezier(.36,.07,.19,.97) both; }
 #flash-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; pointer-events: none; z-index: 9000; opacity: 0; transition: opacity 0.1s ease-out; mix-blend-mode: screen; }
 
-/* --- FEVER MODE (FILTER ONLY) --- */
+/* Last Move Highlight */
+.cell.last-move {
+    border-color: #ffffff !important; box-shadow: 0 0 15px #ffffff, inset 0 0 10px #ffffff44;
+    z-index: 10; transform: scale(1.05);
+}
+
+/* FEVER MODE (FILTER ONLY) */
 body.fever-mode { filter: contrast(1.4) saturate(1.8) brightness(1.2); box-shadow: inset 0 0 100px rgba(255, 0, 0, 0.3); transition: filter 0.2s ease; }
 
 /* --- MODALS & STATS --- */
@@ -166,3 +178,40 @@ body.fever-mode { filter: contrast(1.4) saturate(1.8) brightness(1.2); box-shado
 .stat-val { font-weight: bold; color: #fff; }
 .ach-tag { display: inline-block; padding: 4px 8px; background: #222; border: 1px solid #444; border-radius: 4px; font-size: 0.8em; margin: 4px; color: #888; }
 .ach-tag.unlocked { border-color: var(--primary); color: var(--primary); background: rgba(71, 242, 255, 0.1); }
+
+/* --- NEW: HINT SYSTEM STYLES --- */
+
+/* The Hint Button Animation (Gold Pulse) */
+@keyframes hintPulse {
+    0% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0.7); border-color: #ffd700; }
+    70% { box-shadow: 0 0 0 15px rgba(255, 215, 0, 0); border-color: #ffd700; }
+    100% { box-shadow: 0 0 0 0 rgba(255, 215, 0, 0); border-color: #ffd700; }
+}
+
+/* This class is added to a cell when the AI suggests it */
+.cell.hint-active {
+    animation: hintPulse 1s infinite;
+    z-index: 10;
+    border: 3px solid #ffd700 !important; /* Gold border */
+    box-shadow: 0 0 20px #ffd700, inset 0 0 10px #ffd700;
+}
+
+/* Modal Title for Ads */
+#adModal .modal-title {
+    color: #ffd700;
+    text-shadow: 0 0 10px #ffd700;
+}
+
+/* Gold Button Style */
+#watchAdBtn {
+    background: #ffd700;
+    color: #000;
+    box-shadow: 0 0 15px #ffd700;
+    border: none;
+    font-weight: 800;
+}
+#watchAdBtn:hover {
+    transform: scale(1.05);
+    background: #ffea00;
+    box-shadow: 0 0 25px #ffd700;
+}
