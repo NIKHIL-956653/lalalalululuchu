@@ -105,7 +105,7 @@ export function setBackgroundPulse(color) {
     document.documentElement.style.setProperty('--glow', color);
 }
 
-// Fixed the import error by ensuring startCelebration is exported
+// Added to fix the "import error" and ensure the victory screen works
 export function startCelebration() {
     console.log("Matrix System Overload Initiated...");
     for (let i = 0; i < 50; i++) {

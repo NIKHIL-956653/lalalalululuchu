@@ -1,4 +1,4 @@
-/* js/game.js */
+// js/game.js
 import { playSound, toggleMute } from "./sound.js";
 import { capacity, neighbors, drawCell } from "./board.js";
 import { buildPlayerSettings } from "./player.js";
@@ -58,8 +58,9 @@ function init() {
         document.getElementById("systemSidebar").classList.add('active');
     });
 
-    // ADDED: Listener for the new Exit (X) button
-    $("#closeSidebar")?.addEventListener('click', () => {
+    // UPDATED: Robust listener for the new Exit button
+    $("#closeSidebar")?.addEventListener('click', (e) => {
+        e.stopPropagation(); // Prevents the click from bubbling to the board
         document.getElementById("systemSidebar").classList.remove('active');
     });
 
@@ -212,13 +213,11 @@ async function resolveReactions() {
   const sleep = ms => new Promise(r => requestAnimationFrame(() => setTimeout(r, ms)));
   let loops = 0;
   while (q.length && loops++ < 600) {
-    // --- SAFETY BRAKE ---
     updateScores(); 
     if (movesMade >= players.length) {
         const alive = players.map((_, i) => scores[i] > 0).filter(Boolean);
         if (alive.length === 1) break; 
     }
-    // -----------------------------------------------------------
 
     if (document.body.classList.contains('theme-matrix')) triggerMatrixFlash();
     const wave = [...new Set(q.map(([x, y]) => `${x},${y}`))].map(s => s.split(",").map(Number)); 
@@ -228,9 +227,7 @@ async function resolveReactions() {
       const cap = capacity(x, y, rows, cols); const cell = board[y][x];
       if (cell.count < cap) continue;
 
-      // --- RECONNECTED SPARKLES ---
       spawnParticles(x, y, players[current].color); 
-      // ---------------------------------------------------
 
       cell.count -= cap; if (cell.count === 0) cell.owner = -1; playSound("explode");
       drawCell(x, y, board, boardEl, cols, players, current);
@@ -270,7 +267,6 @@ function finishAd() { isWatchingAd = false; document.getElementById('adModal').s
 function updateHintUI() { const el = document.getElementById('hintCount'); if (el) el.textContent = hintsRemaining; }
 function advanceTurn() { let loop = 0; do { current = (current + 1) % players.length; loop++; } while (firstMove[current] && scores[current] === 0 && loop < players.length); updateStatus(); paintAll(true); if (playing) processTurn(); }
 
-// --- MATRIX THEMED CELEBRATION ---
 function showGameOver(t, m, w) {
     if (document.body.classList.contains('theme-matrix')) {
         for(let i=0; i<5; i++) setTimeout(triggerMatrixFlash, i * 150); 
@@ -285,9 +281,7 @@ function showGameOver(t, m, w) {
     modalNextBtn.style.display = "none";
     gameModal.style.display = "flex";
 }
-// ---------------------------------------------------------------------
 
 function closeModal() { gameModal.style.display = "none"; }
 
-// Start the game initialization
 init();

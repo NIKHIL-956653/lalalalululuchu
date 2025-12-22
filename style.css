@@ -52,7 +52,7 @@ html, body {
     font: 500 16px/1.45 system-ui, -apple-system, Segoe UI, Roboto, Arial;
     display: flex; flex-direction: column; overflow: hidden;
     transition: background-color 0.5s ease;
-    user-select: none; /* Added to prevent text selection during fast gameplay */
+    user-select: none;
     -webkit-tap-highlight-color: transparent;
 }
 
@@ -172,13 +172,13 @@ select, .btn, input[type="color"] { background: #101318; color: #eaf2ff; border:
     left: 0;
     top: 0;
     height: 100vh;
-    width: 220px; /* Slightly wider to accommodate labels */
+    width: 220px;
     background: rgba(0, 0, 0, 0.95);
     border-right: 1px solid var(--matrix-green);
-    transform: translateX(-100%); /* Hidden by default */
+    transform: translateX(-100%);
     transition: transform 0.4s cubic-bezier(0.175, 0.885, 0.32, 1.275);
     z-index: 3000;
-    padding: 60px 20px 20px; /* Added padding-top for the close button */
+    padding: 60px 20px 20px;
     display: flex;
     flex-direction: column;
     gap: 15px;
@@ -186,26 +186,27 @@ select, .btn, input[type="color"] { background: #101318; color: #eaf2ff; border:
 }
 
 #systemSidebar.active {
-    transform: translateX(0); /* Slides in */
+    transform: translateX(0);
 }
 
-/* ADDED: Styling for the Sidebar Exit Button */
+/* UPDATED: Larger Hitbox for the Close Button */
 .close-btn {
     position: absolute;
-    top: 15px;
-    right: 20px;
+    top: 10px;
+    right: 10px;
+    width: 44px; /* Minimum recommended touch target size */
+    height: 44px; /* Minimum recommended touch target size */
     background: none;
     border: none;
     color: var(--matrix-green);
-    font-size: 2.5rem;
+    font-size: 2.8rem;
     cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
     line-height: 1;
     text-shadow: 0 0 10px var(--matrix-green);
-    transition: transform 0.2s ease;
-}
-
-.close-btn:active {
-    transform: scale(0.9);
+    z-index: 3001; /* Ensure it stays above sidebar content */
 }
 
 .sidebar-header { font-size: 0.75rem; color: var(--matrix-green); font-weight: 800; letter-spacing: 2px; border-bottom: 1px solid var(--matrix-green); padding-bottom: 5px; margin-bottom: 10px; }
@@ -215,28 +216,23 @@ select, .btn, input[type="color"] { background: #101318; color: #eaf2ff; border:
 
 /* FIX: Low Visibility Rain Behind Board */
 #board {
-    background: rgba(0, 0, 0, 0.75) !important; /* The "Tinted Glass" floor */
-    backdrop-filter: blur(2px) !important; /* Softens rain behind orbs */
+    background: rgba(0, 0, 0, 0.75) !important;
+    backdrop-filter: blur(2px) !important;
     border: 1px solid rgba(0, 255, 65, 0.3) !important;
     border-radius: 18px !important;
     padding: 10px !important;
     box-shadow: 0 0 25px rgba(0, 0, 0, 0.8) !important;
 }
 
-/* ADDED: Mobile Responsive Fixes */
+/* MOBILE RESPONSIVE FIXES */
 @media (max-width: 600px) {
     #systemSidebar {
-        width: 160px;
-        padding-top: 50px;
+        width: 170px;
+        padding-top: 60px;
     }
     .matrix-btn {
         font-size: 0.65rem;
         padding: 8px 5px;
-    }
-    .close-btn {
-        font-size: 1.8rem;
-        top: 10px;
-        right: 15px;
     }
     #mainMenu h1 {
         font-size: 1.8rem;
@@ -247,4 +243,4 @@ select, .btn, input[type="color"] { background: #101318; color: #eaf2ff; border:
 .modal-overlay { position: fixed; top: 0; left: 0; width: 100vw; height: 100vh; background: rgba(0, 0, 0, 0.85); backdrop-filter: blur(5px); display: flex; justify-content: center; align-items: center; z-index: 2000; animation: fadeIn 0.3s ease; }
 .modal-content { background: #0a0a0a; border: 2px solid var(--primary); box-shadow: 0 0 30px var(--primary), inset 0 0 20px rgba(71, 242, 255, 0.1); padding: 40px; border-radius: 16px; text-align: center; max-width: 450px; width: 90%; color: #fff; transform: scale(0.9); animation: popIn 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275) forwards; }
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
-@keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }s
+@keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
