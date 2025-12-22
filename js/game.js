@@ -60,6 +60,18 @@ function init() {
         e.target.textContent = `RAIN: ${matrixSettings.rainOn ? 'ON' : 'OFF'}`;
     });
 
+    // --- ADDED SYSTEM SIDEBAR LOGIC ---
+    // 1. Toggle Sidebar when clicking the "SYSTEM" tab
+    document.getElementById("sidebarToggle")?.addEventListener('click', () => {
+        document.getElementById("systemSidebar").classList.toggle('active');
+    });
+
+    // 2. Automatically hide sidebar when you click the board to play
+    boardEl.addEventListener('click', () => {
+        document.getElementById("systemSidebar").classList.remove('active');
+    });
+    // ----------------------------------
+
     $("#hintBtn")?.addEventListener('click', useHint);
     $("#watchAdBtn")?.addEventListener('click', playFakeAd);
     $("#closeAdBtn")?.addEventListener('click', () => { document.getElementById('adModal').style.display = 'none'; });
