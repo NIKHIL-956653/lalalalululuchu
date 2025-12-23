@@ -288,7 +288,19 @@ async function resolveReactions() {
       const cap = capacity(x, y, rows, cols); const cell = board[y][x];
       if (cell.count < cap) continue;
 
-      spawnParticles(x, y, players[current].color); 
+      // Spawn particles at the cell center (convert grid coords to viewport pixels)
+      try {
+        const idx = y * cols + x;
+        const cellEl = boardEl.children[idx];
+        if (cellEl && cellEl.getBoundingClientRect) {
+          const r = cellEl.getBoundingClientRect();
+          spawnParticles(r.left + r.width / 2, r.top + r.height / 2, players[current].color);
+        } else {
+          spawnParticles(x, y, players[current].color);
+        }
+      } catch (e) {
+        spawnParticles(x, y, players[current].color);
+      }
 
       cell.count -= cap; if (cell.count === 0) cell.owner = -1; playSound("explode");
       drawCell(x, y, board, boardEl, cols, players, current);
