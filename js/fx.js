@@ -1,14 +1,15 @@
 /* js/fx.js */
 
-// 1. SETUP FX LAYER
-const fxLayer = document.createElement("div");
-fxLayer.id = "fxLayer";
-Object.assign(fxLayer.style, {
+// 1. SETUP HIGH-PERFORMANCE CANVAS LAYER
+const canvas = document.createElement("canvas");
+const ctx = canvas.getContext("2d", { alpha: true });
+canvas.id = "fxCanvas";
+Object.assign(canvas.style, {
     position: "fixed", top: "0", left: "0",
     width: "100%", height: "100%",
-    pointerEvents: "none", zIndex: "9999", overflow: "hidden"
+    pointerEvents: "none", zIndex: "9999"
 });
-document.body.appendChild(fxLayer);
+document.body.appendChild(canvas);
 
 // 2. SETUP FLASH OVERLAY
 const flashOverlay = document.createElement("div");
@@ -23,75 +24,76 @@ Object.assign(flashOverlay.style, {
 });
 document.body.appendChild(flashOverlay);
 
-// PARTICLE POOL
-const MAX_PARTICLES = 80;
-const particlePool = [];
+// PARTICLE SYSTEM DATA
+let particles = [];
+const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
 
-function getParticle() {
-    if (particlePool.length > 0) return particlePool.pop();
-    const p = document.createElement("div");
-    Object.assign(p.style, {
-        position: "absolute",
-        width: "8px", height: "8px",
-        borderRadius: "50%",
-        pointerEvents: "none",
-        willChange: "transform, opacity" 
-    });
-    return p;
+function resize() {
+    canvas.width = window.innerWidth * window.devicePixelRatio;
+    canvas.height = window.innerHeight * window.devicePixelRatio;
+    ctx.scale(window.devicePixelRatio, window.devicePixelRatio);
 }
+window.addEventListener('resize', resize);
+resize();
 
-function releaseParticle(p) {
-    p.remove();
-    if (particlePool.length < MAX_PARTICLES) {
-        particlePool.push(p);
+// CORE ANIMATION LOOP
+function updateFX() {
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    
+    for (let i = particles.length - 1; i >= 0; i--) {
+        const p = particles[i];
+        p.x += p.vx;
+        p.y += p.vy;
+        p.life -= p.decay;
+        p.size *= 0.96; // Shrink as they fly
+
+        if (p.life <= 0) {
+            particles.splice(i, 1);
+            continue;
+        }
+
+        ctx.globalAlpha = p.life;
+        ctx.fillStyle = p.color;
+        ctx.shadowBlur = isMobile ? 0 : 10; // Disable shadows on mobile for speed
+        ctx.shadowColor = p.color;
+        
+        ctx.beginPath();
+        ctx.arc(p.x, p.y, p.size, 0, Math.PI * 2);
+        ctx.fill();
     }
+    
+    requestAnimationFrame(updateFX);
 }
+requestAnimationFrame(updateFX);
 
 export function spawnParticles(x, y, color) {
-    const isMobile = /iPhone|iPad|iPod|Android/i.test(navigator.userAgent);
-    const count = isMobile ? 8 : 16; 
-    const size = isMobile ? "10px" : "6px"; 
+    const count = isMobile ? 12 : 24; 
+    const baseSize = isMobile ? 4 : 3;
 
     for (let i = 0; i < count; i++) {
-        const p = getParticle();
-        fxLayer.appendChild(p);
-        
-        p.style.width = size;
-        p.style.height = size;
-        p.style.backgroundColor = color;
-        p.style.boxShadow = `0 0 12px ${color}`;
-        p.style.left = x + "px";
-        p.style.top = y + "px";
-        
         const angle = Math.random() * Math.PI * 2;
-        const velocity = 40 + Math.random() * 60; 
-        const tx = Math.cos(angle) * velocity;
-        const ty = Math.sin(angle) * velocity;
-
-        const anim = p.animate([
-            { transform: 'translate3d(0, 0, 0) scale(1.2)', opacity: 1 },
-            { transform: `translate3d(${tx}px, ${ty}px, 0) scale(0)`, opacity: 0 }
-        ], {
-            duration: 500,
-            easing: 'ease-out'
+        const velocity = 2 + Math.random() * 4;
+        
+        particles.push({
+            x: x,
+            y: y,
+            vx: Math.cos(angle) * velocity,
+            vy: Math.sin(angle) * velocity,
+            size: baseSize + Math.random() * 2,
+            color: color,
+            life: 1.0,
+            decay: 0.02 + Math.random() * 0.02
         });
-
-        anim.onfinish = () => releaseParticle(p);
     }
 }
 
 export function triggerShake() {
     const board = document.querySelector('.board');
     if (!board) return;
-
-    if (navigator.vibrate) {
-        navigator.vibrate(20); 
-    }
-
+    if (navigator.vibrate) navigator.vibrate(20); 
     board.classList.remove('shake-active');
     void board.offsetWidth; 
     board.classList.add('shake-active');
-    
     setTimeout(() => board.classList.remove('shake-active'), 200);
 }
 
@@ -99,26 +101,21 @@ export function triggerShake() {
 export function triggerGlitch() {
     const board = document.querySelector('.board');
     if (!board || !document.body.classList.contains('theme-cyberpunk')) return;
-
     board.style.filter = `hue-rotate(${Math.random() * 90}deg) brightness(1.5)`;
     board.style.transform = `translate3d(${Math.random() * 4 - 2}px, 0, 0) skew(${Math.random() * 2 - 1}deg)`;
-    
     setTimeout(() => {
         board.style.filter = '';
         board.style.transform = '';
     }, 150);
 }
 
-// NEW: Magma Heat Surge Effect
+// Magma Heat Surge Effect
 export function triggerHeat() {
     const board = document.querySelector('.board');
     if (!board || !document.body.classList.contains('theme-magma')) return;
-
-    // Simulate an intense heat distortion
     board.style.filter = `contrast(1.2) brightness(1.3) saturate(1.5)`;
     board.style.transform = `scale(1.01)`;
-    triggerFlash('#ff4500'); // Orange-red flash
-
+    triggerFlash('#ff4500'); 
     setTimeout(() => {
         board.style.filter = '';
         board.style.transform = '';
@@ -135,25 +132,17 @@ export function setBackgroundPulse(color) {
     document.documentElement.style.setProperty('--glow', color);
 }
 
-// RESTORED & UPDATED: Victory screen handles Matrix, Cyber, and Magma
+// Victory screen handles Matrix, Cyber, and Magma
 export function startCelebration() {
-    console.log("System Overload Initiated...");
     const isCyber = document.body.classList.contains('theme-cyberpunk');
     const isMagma = document.body.classList.contains('theme-magma');
-    
-    let color = '#00ff41'; // Default Matrix Green
-    if (isCyber) color = '#fcee0a'; // Cyber Yellow
-    if (isMagma) color = '#ff3300'; // Magma Lava Red
+    let color = isCyber ? '#fcee0a' : (isMagma ? '#ff3300' : '#00ff41');
 
-    for (let i = 0; i < 60; i++) {
+    for (let i = 0; i < 100; i++) {
         setTimeout(() => {
-            const x = Math.random() * window.innerWidth;
-            const y = Math.random() * window.innerHeight;
-            spawnParticles(x, y, color); 
-            
-            // Theme-specific victory flashes
-            if (isCyber && i % 10 === 0) triggerFlash('#00f0ff'); // Cyan for Cyber
-            if (isMagma && i % 8 === 0) triggerFlash('#ffaa00');  // Gold for Magma
-        }, i * 50);
+            spawnParticles(Math.random() * window.innerWidth, Math.random() * window.innerHeight, color); 
+            if (isCyber && i % 10 === 0) triggerFlash('#00f0ff');
+            if (isMagma && i % 8 === 0) triggerFlash('#ffaa00');
+        }, i * 40);
     }
 }

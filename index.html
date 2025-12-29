@@ -6,7 +6,6 @@
   <title>Neon Chain Reaction</title>
   <link rel="stylesheet" href="style.css" />
   <style>
-    /* Inline Critical CSS for Loader */
     #loader {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: #000; z-index: 10000;
@@ -69,6 +68,14 @@
                             <option value="4">4 Players</option>
                         </select>
                     </label>
+                    
+                    <label>AI Intelligence:
+                        <select id="aiDifficultySelect">
+                            <option value="easy">Easy (Smart)</option>
+                            <option value="hard" selected>Hard (Strategic 💀)</option>
+                        </select>
+                    </label>
+
                     <label>AI Speed:
                         <select id="aiSpeedSelect">
                             <option value="300">Fast ⚡</option>
@@ -76,11 +83,6 @@
                         </select>
                     </label>
                 </div>
-            </div>
-            
-            <div id="levelSelectorContainer" style="display: none;">
-                <label>Level: <select id="levelSelect"></select></label>
-                <div id="levelNameDisplay" style="color:var(--primary); margin-top:5px;"></div>
             </div>
         </div>
 
@@ -97,63 +99,35 @@
   </div>
 
   <div id="gameView" class="screen">
-    
     <div id="systemSidebar">
         <button id="closeSidebar" class="close-btn">&times;</button>
-        
         <div id="matrixSidebarControls" class="system-controls" style="display: none;">
             <div class="sidebar-header">SYSTEM CONTROLS</div>
-            <div class="control-group">
-                <label>Rain Logic</label>
-                <button id="toggleRain" class="matrix-btn active">RAIN: ON</button>
-            </div>
-            <div class="control-group">
-                <label>Symbol Set</label>
-                <button id="toggleSymbols" class="matrix-btn">MODE: KANJI</button>
-            </div>
-            <div class="control-group">
-                <label>Reaction Flash</label>
-                <button id="toggleFlash" class="matrix-btn active">FLASH: ON</button>
-            </div>
+            <button id="toggleRain" class="matrix-btn active">RAIN: ON</button>
+            <button id="toggleSymbols" class="matrix-btn">MODE: KANJI</button>
+            <button id="toggleFlash" class="matrix-btn active">FLASH: ON</button>
         </div>
-
         <div id="cyberpunkSidebarControls" class="system-controls" style="display: none;">
             <div class="sidebar-header">CYBERLINK HUD</div>
-            <div class="control-group">
-                <label>Visual Interface</label>
-                <button id="toggleScanlines" class="cyber-btn active">SCANLINES: ON</button>
-            </div>
-            <div class="control-group">
-                <label>System Stability</label>
-                <button id="toggleGlitch" class="cyber-btn">GLITCH: OFF</button>
-            </div>
-            <div class="control-group">
-                <label>Cell Topology</label>
-                <button id="toggleHUD" class="cyber-btn active">HUD: SHARP</button>
-            </div>
+            <button id="toggleScanlines" class="cyber-btn active">SCANLINES: ON</button>
+            <button id="toggleGlitch" class="cyber-btn">GLITCH: OFF</button>
+            <button id="toggleHUD" class="cyber-btn active">HUD: SHARP</button>
         </div>
-
         <div id="magmaSidebarControls" class="system-controls" style="display: none;">
             <div class="sidebar-header">MAGMA CORE</div>
-            <div class="control-group">
-                <label>Tectonic Pulse</label>
-                <button id="toggleLava" class="magma-btn active">LAVA: ON</button>
-            </div>
-            <div class="control-group">
-                <label>Thermal Surge</label>
-                <button id="toggleHeat" class="magma-btn active">HEAT: ON</button>
-            </div>
+            <button id="toggleLava" class="magma-btn active">LAVA: ON</button>
+            <button id="toggleHeat" class="magma-btn active">HEAT: ON</button>
         </div>
     </div>
 
     <div class="game-header">
         <button id="backBtn" class="btn small">⬅ Menu</button>
-        <button id="sidebarToggle" class="btn small" style="font-size: 1.2rem; padding: 4px 8px;">⚙️</button>
+        <button id="sidebarToggle" class="btn small">⚙️</button>
         <div class="status-bar">
             <span id="turnBadge" class="badge"></span>
             <span id="statusText">Player 1</span>
         </div>
-        <button id="hintBtn" class="btn small" style="border-color: #ffd700; color: #ffd700; margin-right:5px;">
+        <button id="hintBtn" class="btn small" style="border-color: #ffd700; color: #ffd700;">
             💡 <span id="hintCount">0</span>
         </button>
         <div id="timerContainer" style="display:none;">
@@ -167,13 +141,9 @@
         <div id="territoryMeter" class="territory-meter"></div>
     </div>
 
-    <div id="scoreBoard" style="display:none;">Scores: <span id="scoreDisplay"></span></div>
-
     <div class="board-container">
         <div id="board" class="board"></div>
     </div>
-    
-    <select id="timerSelect" style="display:none;"><option value="120">2m</option></select>
     <button id="soundBtn" class="floating-btn">🔊</button>
   </div>
 
@@ -184,7 +154,6 @@
       <div class="modal-actions">
         <button id="modalMenuBtn" class="modal-btn secondary">Menu</button>
         <button id="modalReplayBtn" class="modal-btn secondary">Play Again</button>
-        <button id="modalNextBtn" class="modal-btn primary">Next Level ➡</button>
       </div>
     </div>
   </div>
@@ -192,29 +161,23 @@
   <div id="adModal" class="modal-overlay" style="display: none;">
     <div class="modal-content">
       <h2 class="modal-title" style="color: #ffd700;">Need Help?</h2>
-      <p style="margin-bottom: 20px;">Watch a short ad to get <b>5 Hints</b>!</p>
       <div id="adProgressContainer" style="display:none; margin: 20px 0;">
           <div style="background:#333; height:10px; border-radius:5px; overflow:hidden;">
-              <div id="adBar" style="width:0%; height:100%; background:#00ffcc; transition:width 0.1s linear;"></div>
+              <div id="adBar" style="width:0%; height:100%; background:#00ffcc;"></div>
           </div>
-          <p style="font-size:0.8em; color:#888; margin-top:5px;">Playing Ad...</p>
       </div>
       <div class="modal-actions">
         <button id="closeAdBtn" class="modal-btn secondary">No Thanks</button>
-        <button id="watchAdBtn" class="modal-btn primary" style="background:#ffd700; color:black;">📺 Watch Ad</button>
+        <button id="watchAdBtn" class="modal-btn primary">📺 Watch Ad</button>
       </div>
     </div>
   </div>
 
-  <div id="achievement-container"></div>
-  
   <div id="statsModal" class="modal-overlay" style="display: none;">
     <div class="modal-content">
       <h2 class="modal-title">Career Stats</h2>
-      <div id="statsBody" class="modal-body" style="text-align: left;"></div>
-      <div class="modal-actions">
-        <button id="closeStatsBtn" class="modal-btn primary">Close</button>
-      </div>
+      <div id="statsBody" class="modal-body"></div>
+      <button id="closeStatsBtn" class="modal-btn primary">Close</button>
     </div>
   </div>
 

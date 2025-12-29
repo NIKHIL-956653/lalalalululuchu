@@ -29,14 +29,12 @@ export function buildPlayerSettings(count, players, playerTypes, resetFunc, upda
     labelName.appendChild(nameInput);
 
     const typeSelect = el("select", "");
-    // --- NEW PERSONALITY MENU ---
+    // REMOVED MEDIUM OPTION - Easy and Hard Only
     typeSelect.innerHTML = `
       <option value="human" ${playerTypes[i].type === 'human' ? 'selected' : ''}>Human</option>
       <option value="easy" ${playerTypes[i].difficulty === 'easy' ? 'selected' : ''}>Easy (Smart)</option>
-      <option value="greedy" ${playerTypes[i].difficulty === 'greedy' ? 'selected' : ''}>Medium (Aggressive)</option>
-      <option value="hard" ${playerTypes[i].difficulty === 'hard' ? 'selected' : ''}>Hard (Master)</option>
+      <option value="hard" ${playerTypes[i].difficulty === 'hard' ? 'selected' : ''}>Hard (Master 💀)</option>
     `;
-    // ----------------------------
     
     const labelP = el("label", ""); labelP.textContent = ` Color: `;
     const colorInput = el("input", "", { type: "color", value: players[i].color });
