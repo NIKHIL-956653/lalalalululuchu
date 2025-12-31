@@ -1,4 +1,4 @@
-/* js/board.js - Complete Wall-Aware Board Engine */
+/* js/board.js - Component-Aware Board Engine (Merged: Photorealistic Electrician + Energy Aura) */
 
 const el = (t, c, attrs = {}) => {
   const n = document.createElement(t);
@@ -23,7 +23,6 @@ export const neighbors = (x, y, rows, cols, board) => {
   if (y < rows - 1) potential.push([x, y + 1]);
 
   for (const [nx, ny] of potential) {
-    // Check if the coordinate is within bounds and NOT blocked
     if (board[ny] && board[ny][nx] && board[ny][nx].isBlocked === false) {
       n.push([nx, ny]);
     }
@@ -31,7 +30,7 @@ export const neighbors = (x, y, rows, cols, board) => {
   return n;
 };
 
-// GRAPHICS: BOMB SVG GENERATOR
+// BOMB LOGIC PRESERVED FOR CLASSIC THEMES
 export function makeBombSVG(color) {
   const ns = "http://www.w3.org/2000/svg";
   const svg = document.createElementNS(ns, "svg");
@@ -39,67 +38,118 @@ export function makeBombSVG(color) {
   svg.classList.add("bombsvg");
 
   const body = document.createElementNS(ns, "circle");
-  body.setAttribute("cx", "32"); body.setAttribute("cy", "36"); body.setAttribute("r", "16");
-  body.setAttribute("fill", color); body.setAttribute("filter", `drop-shadow(0 0 14px ${color})`);
+  body.setAttribute("cx", "32");
+  body.setAttribute("cy", "36");
+  body.setAttribute("r", "16");
+  body.setAttribute("fill", color);
+  body.setAttribute("filter", `drop-shadow(0 0 14px ${color})`);
   svg.appendChild(body);
 
-  const shine = document.createElementNS(ns, "circle");
-  shine.setAttribute("cx", "26"); shine.setAttribute("cy", "30"); shine.setAttribute("r", "6");
-  shine.setAttribute("fill", "#fff"); shine.setAttribute("opacity", ".22"); 
-  svg.appendChild(shine);
-
-  const fuse = document.createElementNS(ns, "rect");
-  fuse.setAttribute("x", "29"); fuse.setAttribute("y", "16"); fuse.setAttribute("width", "6"); fuse.setAttribute("height", "8"); fuse.setAttribute("rx", "2");
-  fuse.setAttribute("fill", "#c9a777"); 
-  svg.appendChild(fuse);
-
-  const spark = document.createElementNS(ns, "circle");
-  spark.setAttribute("cx", "32"); spark.setAttribute("cy", "16"); spark.setAttribute("r", "4");
-  spark.setAttribute("fill","#ffd54a"); spark.setAttribute("filter","drop-shadow(0 0 8px #ffd54a)");
-  svg.appendChild(spark);
-
   return svg;
+}
+
+/**
+ * ELECTRICIAN: Photorealistic component images
+ * Uses CSS for aura + bulge. (No forced tint here.)
+ */
+function makeElectricianIMG(count) {
+  const img = document.createElement("img");
+  img.className = "component-img";
+
+  if (count === 1) {
+    img.src = "assets/ceramic_diskcapacitor_small.png";
+  } else if (count === 2) {
+    img.src = "assets/axial_resistor_medium.png";
+  } else {
+    img.src = "assets/integrated_circuit.png"; // count >= 3
+  }
+
+  img.draggable = false;
+  img.alt = "component";
+
+  return img;
+}
+
+/**
+ * Apply aura hooks for CSS:
+ * - data-player="0/1/2..."
+ * - --aura: player color
+ */
+function applyAura(cellEl, ownerIndex, players) {
+  if (ownerIndex === -1 || ownerIndex == null) {
+    cellEl.removeAttribute("data-player");
+    cellEl.style.removeProperty("--aura");
+    return;
+  }
+
+  cellEl.setAttribute("data-player", String(ownerIndex));
+  const aura = players?.[ownerIndex]?.color || "#00ffff";
+  cellEl.style.setProperty("--aura", aura);
 }
 
 // MAIN RENDER ENGINE
 export function drawCell(x, y, board, boardEl, cols, players, current, withPulse = false) {
   const idx = y * cols + x;
   const cellEl = boardEl.children[idx];
+  if (!cellEl) return;
+
   const data = board[y][x];
   const rows = board.length;
+  const isElectrician = document.body.classList.contains("theme-electrician");
 
+  // Clear + reset
   cellEl.innerHTML = "";
   cellEl.classList.remove("owned", "pulse", "blocked", "critical");
-  
+
+  // Blocked cell
   if (data.isBlocked) {
     cellEl.classList.add("blocked");
+    cellEl.removeAttribute("data-player");
+    cellEl.style.removeProperty("--aura");
     return;
   }
-  
-  cellEl.classList.toggle("owned", data.owner !== -1);
 
-  // SYSTEM SHOCK: Activate red vibration alert when cell is one move from exploding
-  const isCrit = data.count === capacity(x, y, rows, cols) - 1 && data.count > 0;
-  cellEl.classList.toggle('critical', isCrit);
+  // Owned + aura data attribute
+  const isOwned = data.owner !== -1;
+  cellEl.classList.toggle("owned", isOwned);
+  applyAura(cellEl, data.owner, players);
 
-  if (withPulse) { 
-    cellEl.classList.add("pulse"); 
-    if(players[current]) cellEl.style.setProperty("--glow", players[current].color); 
+  // Critical: one move before explosion
+  const cap = capacity(x, y, rows, cols);
+  const isCrit = data.count === cap - 1 && data.count > 0;
+  cellEl.classList.toggle("critical", isCrit);
+
+  // Pulse effect (legacy glow variable)
+  if (withPulse) {
+    cellEl.classList.add("pulse");
+    if (players?.[current]) cellEl.style.setProperty("--glow", players[current].color);
   }
 
+  // Nothing to render
   if (data.count === 0) return;
 
-  const color = players[data.owner]?.color || "#ccc";
+  // Player color (fallback for legacy modes)
+  const playerColor = players?.[data.owner]?.color || "#ccc";
 
-  // DRAW DIFFERENT ORB STATES
-  if (data.count === 1) {
-    const o = el("div", "orb one"); o.style.background = color; o.style.color = color; cellEl.appendChild(o);
-  } else if (data.count === 2) {
-    const wrap = el("div", "pair-improved");
-    const a = el("div", "orb two-orb"), b = el("div", "orb two-orb");
-    a.style.background = color; b.style.background = color; wrap.append(a, b); cellEl.appendChild(wrap);
+  // RENDER
+  if (isElectrician) {
+    cellEl.appendChild(makeElectricianIMG(data.count));
   } else {
-    // CAP + ORBS STATE: SHOW BOMB
-    cellEl.appendChild(makeBombSVG(color));
+    // ORIGINAL NEON ORB LOGIC
+    if (data.count === 1) {
+      const o = el("div", "orb one");
+      o.style.background = playerColor;
+      cellEl.appendChild(o);
+    } else if (data.count === 2) {
+      const wrap = el("div", "pair-improved");
+      const a = el("div", "orb two-orb");
+      const b = el("div", "orb two-orb");
+      a.style.background = playerColor;
+      b.style.background = playerColor;
+      wrap.append(a, b);
+      cellEl.appendChild(wrap);
+    } else {
+      cellEl.appendChild(makeBombSVG(playerColor));
+    }
   }
 }

@@ -33,7 +33,6 @@ body.theme-cyberpunk {
     --border-color: #fcee0a66; 
 }
 
-/* CYBERPUNK SCANLINES */
 body.theme-cyberpunk.scanlines-active::before {
     content: " ";
     position: fixed;
@@ -46,7 +45,6 @@ body.theme-cyberpunk.scanlines-active::before {
     opacity: 0.6;
 }
 
-/* INTERACTIVE DIGITAL GLITCH */
 .glitch-active .board {
     animation: digital-tear 0.2s infinite;
 }
@@ -61,8 +59,6 @@ body.theme-cyberpunk.scanlines-active::before {
 body.theme-cyberpunk #mainMenu { background: radial-gradient(circle at center, #2b002b 0%, #000 100%); }
 
 /* MAGMA THEME */
-
-/* INTEGRATED FIX: Transparency Overrides so Lava Rain is visible */
 body.theme-magma, 
 body.theme-magma .screen, 
 body.theme-magma #mainMenu, 
@@ -78,7 +74,6 @@ body.theme-magma {
     --border-color: #ff330055; 
 }
 
-/* MAGMA LAVA PULSE */
 body.theme-magma.lava-active .board {
     animation: lava-heat 3s infinite ease-in-out;
     background: radial-gradient(circle, rgba(46, 14, 0, 0.7) 0%, rgba(26, 5, 0, 0.9) 100%) !important;
@@ -102,6 +97,54 @@ body.theme-matrix {
 
 body.theme-matrix, body.theme-matrix .screen, body.theme-matrix #mainMenu, body.theme-matrix #gameView {
     background: transparent !important;
+}
+
+/* NEW: ELECTRICIAN THEME - Industrial Power Grid */
+body.theme-electrician {
+    --primary: #00ffff; /* Electric Blue Arc */
+    --glow: #b87333;    /* Copper Wire Glow */
+    --board-bg: #121a12; 
+    --cell-bg: #1a221a; 
+    --border-color: #b8733355;
+}
+
+/* PCB (Printed Circuit Board) Layout (old base) */
+body.theme-electrician #gameView {
+    background-color: #050a05 !important;
+    background-image: 
+        radial-gradient(#1a331a 1px, transparent 1px),
+        linear-gradient(to right, #112211 1px, transparent 1px),
+        linear-gradient(to bottom, #112211 1px, transparent 1px) !important;
+    background-size: 40px 40px, 20px 20px, 20px 20px;
+}
+
+/* Copper Trace Borders (old base) */
+body.theme-electrician .cell {
+    border-radius: 2px; /* Industrial Rectangular Look */
+    border: 1px solid #b8733377;
+    box-shadow: inset 0 0 8px rgba(184, 115, 51, 0.1);
+}
+
+body.theme-electrician .cell.critical {
+    animation: electrician-arc 0.1s infinite alternate; /* High-voltage flicker */
+}
+
+@keyframes electrician-arc {
+    0% { border-color: #b87333; box-shadow: 0 0 5px #00ffff; }
+    100% { border-color: #fff; box-shadow: 0 0 15px #fff; }
+}
+
+/* Power Components (Industrial Orbs) */
+body.theme-electrician .orb.capacitor {
+    border-radius: 1px;
+    background: linear-gradient(to bottom, #00ffff 0%, #008b8b 100%);
+    box-shadow: 0 0 12px #00ffff;
+}
+
+body.theme-electrician .power-pack .orb {
+    border-radius: 1px;
+    background: #b87333;
+    border: 1px solid #ffcc66;
 }
 
 /* --- GLOBAL LAYOUT --- */
@@ -332,8 +375,12 @@ body.theme-cyberpunk.hud-sharp .cell {
 @keyframes fadeIn { from { opacity: 0; } to { opacity: 1; } }
 @keyframes popIn { from { transform: scale(0.8); opacity: 0; } to { transform: scale(1); opacity: 1; } }
 
+ /* Achievement toasts */
+#achievement-container { position: fixed; top: 20px; right: 20px; z-index: 9999; display:flex; flex-direction: column; gap: 10px; pointer-events: none; }
+.achievement-toast { background: rgba(20,20,20,0.9); border: 1px solid var(--primary); padding: 10px 14px; border-radius: 8px; color: #fff; display:flex; gap:8px; align-items:center; box-shadow: 0 0 12px var(--glow); pointer-events: auto; }
+.achievement-toast.hide { opacity: 0; transform: translateY(-6px); transition: opacity .4s, transform .4s; }
 
-/* --- SYSTEM FEEDBACK FX --- */
+ /* --- SYSTEM FEEDBACK FX --- */
 
 /* AI THINKING PULSE */
 .badge.calculating {
@@ -368,4 +415,169 @@ body.theme-cyberpunk.hud-sharp .cell {
 @keyframes hintGlow {
     from { opacity: 1; transform: scale(1); }
     to { opacity: 0.7; transform: scale(1.1); }
+}
+
+
+/* ============================================================
+   MERGED IN: Industrial Physical Engine Update (NEW SECTION)
+   (Placed at end so it overrides older Electrician rules cleanly)
+   ============================================================ */
+
+/* THEME: ELECTRICIAN - High-End Industrial */
+body.theme-electrician #gameView {
+    background: url('assets/Background_board.png') no-repeat center center !important;
+    background-size: cover !important;
+}
+
+/* Glassy board overlay (keeps your background visible) */
+body.theme-electrician .board {
+    background: rgba(0, 20, 20, 0.4) !important; /* Semi-transparent glass */
+    backdrop-filter: blur(10px);
+    border: 1px solid #00ffff44;
+}
+
+/* Subtle copper-trace cell */
+body.theme-electrician .cell {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(184, 115, 51, 0.2) !important;
+    border-radius: 4px !important;
+    box-shadow: inset 0 0 8px rgba(184, 115, 51, 0.08) !important;
+}
+
+/* THE BULGE: Physical Expansion Animation */
+.component-img {
+    width: 90%;
+    height: 90%;
+    object-fit: contain;
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275);
+}
+
+.cell.owned .component-img {
+    animation: component-breathe 3s infinite ease-in-out;
+}
+
+.cell.critical .component-img {
+    animation: component-bulge 0.4s infinite alternate ease-in-out;
+    filter: drop-shadow(0 0 10px #ff4500) brightness(1.2);
+}
+
+@keyframes component-breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+@keyframes component-bulge {
+    from { transform: scale(1.05); }
+    to { transform: scale(1.25); } /* The "Bulge" effect right before explosion */
+}
+
+
+/* ============================================================
+   FINAL MERGE: Electrician Identification + Energy Aura
+   (Place at END of style.css so it overrides correctly)
+   ============================================================ */
+
+/* IMPORTANT:
+   These styles assume your cells will have: data-player="0" / "1" etc.
+   Add this in board.js drawCell (I’ll show the 2-line patch after CSS).
+*/
+
+/* Base component image (unified version) */
+body.theme-electrician .component-img {
+    width: 85%;
+    height: 85%;
+    object-fit: contain;
+    transform: translateZ(0);
+    will-change: transform, filter;
+    filter: drop-shadow(0 0 5px rgba(255,255,255,0.2));
+    transition: transform 0.2s cubic-bezier(0.175, 0.885, 0.32, 1.275),
+                filter 0.2s ease;
+}
+
+/* Electrician board background image */
+body.theme-electrician #gameView {
+    background: url('assets/Background_board.png') no-repeat center center !important;
+    background-size: cover !important;
+}
+
+/* Glass board overlay */
+body.theme-electrician .board {
+    background: rgba(0, 20, 20, 0.4) !important;
+    backdrop-filter: blur(10px);
+    border: 1px solid #00ffff44;
+}
+
+/* Subtle copper trace cells */
+body.theme-electrician .cell {
+    background: rgba(255, 255, 255, 0.03) !important;
+    border: 1px solid rgba(184, 115, 51, 0.2) !important;
+    border-radius: 4px !important;
+    box-shadow: inset 0 0 8px rgba(184, 115, 51, 0.08) !important;
+}
+
+/* Owned = breathing */
+body.theme-electrician .cell.owned .component-img {
+    animation: component-breathe 3s infinite ease-in-out;
+}
+
+@keyframes component-breathe {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.05); }
+}
+
+/* -----------------------------
+   Player Ownership Aura (data-player)
+   ----------------------------- */
+
+/* Player 0 (Blue) */
+body.theme-electrician .cell.owned[data-player="0"] {
+    border: 2px solid #00ffff !important;
+    box-shadow:
+        inset 0 0 15px rgba(0, 255, 255, 0.35),
+        0 0 10px rgba(0, 255, 255, 0.20) !important;
+}
+body.theme-electrician .cell.owned[data-player="0"] .component-img {
+    filter: drop-shadow(0 0 12px #00ffff) !important;
+}
+
+/* Player 1 (Orange) */
+body.theme-electrician .cell.owned[data-player="1"] {
+    border: 2px solid #ff8c00 !important;
+    box-shadow:
+        inset 0 0 15px rgba(255, 140, 0, 0.35),
+        0 0 10px rgba(255, 140, 0, 0.20) !important;
+}
+body.theme-electrician .cell.owned[data-player="1"] .component-img {
+    filter: drop-shadow(0 0 12px #ff8c00) !important;
+}
+
+/* Optional: if you have 3+ players, they still get glow using CSS var */
+body.theme-electrician .cell.owned .component-img {
+    filter: drop-shadow(0 0 10px var(--glow, #00ffff));
+}
+
+/* -----------------------------
+   Critical bulge (override generic red dangerPulse only in electrician)
+   ----------------------------- */
+
+/* Stop the global red critical pulse from dominating electrician */
+body.theme-electrician .cell.critical {
+    animation: none !important;
+    border-color: rgba(255,255,255,0.35) !important;
+}
+
+/* Bulging surge */
+body.theme-electrician .cell.critical .component-img {
+    animation: physical-overload 0.4s infinite alternate;
+}
+
+@keyframes physical-overload {
+    from {
+        transform: scale(1);
+        filter: brightness(1) drop-shadow(0 0 8px rgba(255,255,255,0.25));
+    }
+    to {
+        transform: scale(1.2);
+        filter: brightness(1.5) drop-shadow(0 0 22px rgba(255,255,255,0.55));
+    }
 }

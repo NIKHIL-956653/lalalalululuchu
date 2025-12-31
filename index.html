@@ -5,7 +5,9 @@
   <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1, user-scalable=0" />
   <title>Neon Chain Reaction</title>
   <link rel="stylesheet" href="style.css" />
+  <link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 100 100'%3E%3Ccircle cx='50' cy='50' r='48' fill='%2300ffcc'/%3E%3C/svg%3E">
   <style>
+    /* SYSTEM LOADER STYLES */
     #loader {
       position: fixed; top: 0; left: 0; width: 100%; height: 100%;
       background: #000; z-index: 10000;
@@ -50,6 +52,7 @@
                         <option value="theme-cyberpunk">Cyberpunk 2077</option>
                         <option value="theme-magma">Magma Core</option>
                         <option value="theme-matrix">The Matrix</option>
+                        <option value="theme-electrician">Electrician Concept</option>
                     </select>
                 </label>
 
@@ -101,22 +104,31 @@
   <div id="gameView" class="screen">
     <div id="systemSidebar">
         <button id="closeSidebar" class="close-btn">&times;</button>
+        
         <div id="matrixSidebarControls" class="system-controls" style="display: none;">
             <div class="sidebar-header">SYSTEM CONTROLS</div>
             <button id="toggleRain" class="matrix-btn active">RAIN: ON</button>
             <button id="toggleSymbols" class="matrix-btn">MODE: KANJI</button>
             <button id="toggleFlash" class="matrix-btn active">FLASH: ON</button>
         </div>
+
         <div id="cyberpunkSidebarControls" class="system-controls" style="display: none;">
             <div class="sidebar-header">CYBERLINK HUD</div>
             <button id="toggleScanlines" class="cyber-btn active">SCANLINES: ON</button>
             <button id="toggleGlitch" class="cyber-btn">GLITCH: OFF</button>
             <button id="toggleHUD" class="cyber-btn active">HUD: SHARP</button>
         </div>
+
         <div id="magmaSidebarControls" class="system-controls" style="display: none;">
             <div class="sidebar-header">MAGMA CORE</div>
             <button id="toggleLava" class="magma-btn active">LAVA: ON</button>
             <button id="toggleHeat" class="magma-btn active">HEAT: ON</button>
+        </div>
+
+        <div id="electricianSidebarControls" class="system-controls" style="display: none;">
+            <div class="sidebar-header">INDUSTRIAL GRID</div>
+            <button id="toggleCircuits" class="magma-btn active">CIRCUITS: ON</button>
+            <button id="toggleVoltage" class="magma-btn active">VOLTAGE: HIGH</button>
         </div>
     </div>
 
@@ -181,9 +193,12 @@
     </div>
   </div>
 
+  <div id="achievement-container" aria-live="polite" style="position:fixed; top:20px; right:20px; z-index:9999; display:flex; flex-direction:column; gap:8px;"></div>
+
   <script type="module" src="js/game.js"></script>
 
   <script>
+    // GLOBAL SYSTEM LOADER
     window.onload = function() {
         setTimeout(() => {
             const loader = document.getElementById('loader');
