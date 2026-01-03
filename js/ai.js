@@ -1,4 +1,4 @@
-/* js/ai.js - God-Mode Intelligence with Early-Game Randomization */
+/* js/ai.js - God-Mode Intelligence with Professional Prediction Engine */
 import { capacity, neighbors } from "./board.js";
 
 const WIN_SCORE = 10000;
@@ -107,10 +107,9 @@ function minimax(board, depth, alpha, beta, isMax, player, rows, cols) {
     }
 }
 
-
-
 /**
  * MAIN AI INTERFACE
+ * Standard move logic for opponent players.
  */
 export function makeAIMove(board, player, difficulty, rows, cols) {
     const valid = [];
@@ -120,9 +119,9 @@ export function makeAIMove(board, player, difficulty, rows, cols) {
         }
     }
 
-    let depth = 3;
+    let depth = (difficulty === "hard") ? 3 : 2; // Difficulty scaling
     const occupancy = board.flat().filter(c => c.owner !== -1).length / (rows * cols);
-    if (occupancy > 0.55) depth = 2; // Performance safety
+    if (occupancy > 0.6) depth = 2; // Performance fallback
 
     let bestMoves = [];
     let bestVal = -Infinity;
@@ -134,13 +133,44 @@ export function makeAIMove(board, player, difficulty, rows, cols) {
         
         if (val > bestVal) {
             bestVal = val;
-            bestMoves = [m]; // New best found
+            bestMoves = [m];
         } else if (val === bestVal) {
-            bestMoves.push(m); // Tie found
+            bestMoves.push(m);
         }
         alpha = Math.max(alpha, bestVal);
     }
 
-    // BEHAVIOR FIX: Pick a random move from the best ones to stop "Row-Wise" behavior
     return bestMoves[Math.floor(Math.random() * bestMoves.length)] || valid[0];
+}
+
+/**
+ * PROFESSIONAL PREDICTION ENGINE (HINT SYSTEM)
+ * Specifically designed to provide the highest-tier strategic move for the player.
+ */
+export function getProfessionalHint(board, player, rows, cols) {
+    // Force a deeper lookahead for the "System Forecast"
+    const depth = 4; 
+    const valid = [];
+    for (let y = 0; y < rows; y++) {
+        for (let x = 0; x < cols; x++) {
+            if (board[y][x].owner === -1 || board[y][x].owner === player) valid.push({ x, y });
+        }
+    }
+
+    let bestMove = null;
+    let bestVal = -Infinity;
+    let alpha = LOS_SCORE;
+
+    for (const m of valid) {
+        const nextState = simulateBoardState(board, m.x, m.y, player, rows, cols);
+        const val = minimax(nextState, depth - 1, alpha, WIN_SCORE, false, player, rows, cols);
+        
+        if (val > bestVal) {
+            bestVal = val;
+            bestMove = m;
+        }
+        alpha = Math.max(alpha, bestVal);
+    }
+    
+    return bestMove;
 }

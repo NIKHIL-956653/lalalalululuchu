@@ -1,11 +1,12 @@
-/* js/game.js - Full Source with Magma Rain, Ad System, and Electrician Integration */
+/* js/game.js - Full Source with Magma Rain, Ad System, and Professional Hint Integration */
 import { playSound, toggleMute } from "./sound.js";
 import { capacity, neighbors, drawCell } from "./board.js";
 import { buildPlayerSettings } from "./player.js";
-import { makeAIMove } from "./ai.js";         
+import { makeAIMove, getProfessionalHint } from "./ai.js"; // INTEGRATED: Professional Hint Export
 import { spawnParticles, triggerShake, triggerFlash, triggerGlitch, triggerHeat, startCelebration } from "./fx.js"; 
 import { recordGameEnd, tryUnlockAchievement, loadData, saveTheme, getSavedTheme } from "./storage.js";
 import { initMatrix, drawMatrix, stopMatrix, triggerMatrixFlash, matrixSettings } from "./matrix.js";
+// INTEGRATED: Magma Rain Engine Imports
 import { initMagma, drawMagma, stopMagma, magmaSettings as lavaRainSettings } from "./magma.js";
 
 // Placeholders for Saga/Bliss Mode data
@@ -100,7 +101,7 @@ function init() {
     });
 
     $("#toggleScanlines")?.addEventListener('click', (e) => {
-        cyberSettings.scanlines = !cyberSettings.scanlines;
+        cyberSettings.scanlines = cyberSettings.scanlines;
         document.body.classList.toggle('scanlines-active', cyberSettings.scanlines);
         e.target.textContent = `SCANLINES: ${cyberSettings.scanlines ? 'ON' : 'OFF'}`;
     });
@@ -153,7 +154,7 @@ function applyTheme(t) {
         }
     } else if (t === 'theme-electrician') {
         document.body.classList.add('theme-electrician');
-        if(boardEl) boardEl.style.background = "rgba(0, 20, 20, 0.4)"; // Set theme-specific glass
+        if(boardEl) boardEl.style.background = "rgba(0, 20, 20, 0.4)"; 
     } else if (t !== 'default') {
         document.body.classList.add(t);
     }
@@ -259,7 +260,6 @@ async function resolveReactions() {
     if (document.body.classList.contains('theme-matrix')) triggerMatrixFlash();
     if (magmaSettings.heatActive) triggerHeat(); 
     
-    // NEW: Electrician Surge Reaction
     if (document.body.classList.contains('theme-electrician')) {
         triggerFlash(); 
         if (loops % 2 === 0) triggerGlitch();
@@ -383,16 +383,37 @@ function showStats() {
     document.getElementById('statsModal').style.display = 'flex'; 
 }
 
+/**
+ * UPDATED: PROFESSIONAL HINT SYSTEM
+ * Uses the getProfessionalHint engine for deep strategic predictions.
+ */
 function useHint() { 
     if (!playing || playerTypes[current].type === 'ai') return; 
-    if (hintsRemaining <= 0) { document.getElementById('adModal').style.display = 'flex'; return; } 
-    if(statusText) statusText.textContent = "ANALYZING...";
-    const best = makeAIMove(board, current, "hard", rows, cols, players.length); 
+    
+    if (hintsRemaining <= 0) { 
+        document.getElementById('adModal').style.display = 'flex'; 
+        return; 
+    } 
+
+    // THEMATIC FEEDBACK: Visualizing the strategic forecast
+    if(statusText) statusText.textContent = "SCANNING VOLTAGE...";
+    triggerFlash(); // Electrical surge effect
+
+    // Uses the upgraded depth-4 lookahead from ai.js
+    const best = getProfessionalHint(board, current, rows, cols); 
+    
     if (best) { 
-        hintsRemaining--; updateHintUI(); 
+        hintsRemaining--; 
+        updateHintUI(); 
         const el = boardEl.children[best.y * cols + best.x]; 
+        
+        // Triggers the high-voltage pulsing animation
         el.classList.add('hint-active'); 
-        setTimeout(() => { el.classList.remove('hint-active'); updateStatus(); }, 3000); 
+        
+        setTimeout(() => { 
+            el.classList.remove('hint-active'); 
+            updateStatus(); 
+        }, 3500); 
     } 
 }
 
